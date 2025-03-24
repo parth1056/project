@@ -102,7 +102,8 @@
     
     input[type="text"],
     input[type="email"],
-    input[type="password"] {
+    input[type="password"]
+    {
       width: 100%;
       padding: 14px;
       border: none;
@@ -195,6 +196,19 @@
         <div class="form-group">
           <label for="name" class="form-label">Name</label>
           <input type="text" id="name" name="name" required>
+        </div>
+        <div class="form-group">
+          <label for="phone" class="form-label">Phone number</label>
+          <input 
+            type="text" 
+            id="phone" 
+            name="phone" 
+            maxlength="10" 
+            pattern="[0-9]{10}" 
+            title="10-digit phone number" 
+            required 
+            oninput="this.value = this.value.replace(/[^0-9]/g, '');"
+          >
         </div>
         <div class="form-group">
           <label for="email" class="form-label">Email</label>
