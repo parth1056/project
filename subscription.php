@@ -24,6 +24,35 @@ if ($result->num_rows > 0) {
     exit();
 }
 
+if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['selected_plan'])) {
+    $selected_plan = $_POST['selected_plan'];
+    
+    $plan_details = [
+        'Starter Plan' => ['length' => 30, 'price' => 0],
+        'Beginner Plan' => ['length' => 90, 'price' => 500],
+        'Advanced Plan' => ['length' => 180, 'price' => 1000],
+        'Elite Plan' => ['length' => 365, 'price' => 5000]
+    ];
+    
+    if (isset($plan_details[$selected_plan])) {
+        $plan_length = $plan_details[$selected_plan]['length'];
+        $plan_price = $plan_details[$selected_plan]['price'];
+        $start_date = date('Y-m-d');
+        
+        $insert_stmt = $conn->prepare("INSERT INTO usersubscription (user_email, start_date, plan_length, plan_price) VALUES (?, ?, ?, ?)");
+        $insert_stmt->bind_param("ssid", $user_email, $start_date, $plan_length, $plan_price);
+        
+        if ($insert_stmt->execute()) {
+            header("Location: details.php");
+            exit();
+        } else {
+            $error_message = "Error processing subscription: " . $insert_stmt->error;
+        }
+        
+        $insert_stmt->close();
+    }
+}
+
 $conn->close();
 ?>
 
@@ -208,6 +237,22 @@ $conn->close();
             }
         }
     </style>
+    <script>
+        function selectPlan(planName) {
+            var form = document.createElement('form');
+            form.method = 'post';
+            form.action = '';
+            
+            var input = document.createElement('input');
+            input.type = 'hidden';
+            input.name = 'selected_plan';
+            input.value = planName;
+            
+            form.appendChild(input);
+            document.body.appendChild(form);
+            form.submit();
+        }
+    </script>
 </head>
 <body>
 
@@ -219,6 +264,13 @@ $conn->close();
             <a href="logout.php" class="logout-btn">Logout</a>
         </div>
     </header>
+
+    <?php
+    if (isset($error_message)) {
+        echo "<div style='color: red; text-align: center; margin-top: 20px;'>" . 
+             htmlspecialchars($error_message) . "</div>";
+    }
+    ?>
 
     <h1>CHOOSE YOUR PLAN</h1>
 
@@ -233,7 +285,7 @@ $conn->close();
                 <li>1 Account</li>
                 <li>Static Diet</li>
             </ul>
-            <a href="details.php" class="subscribe-btn">Subscribe</a>
+            <a href="#" onclick="selectPlan('Starter Plan'); return false;" class="subscribe-btn">Subscribe</a>
         </div>
 
         <div class="plan-box">
@@ -247,7 +299,7 @@ $conn->close();
                 <li>Static Diet</li>
                 <li>Diet Tracker</li>
             </ul>
-            <a href="details.php" class="subscribe-btn">Subscribe</a>
+            <a href="#" onclick="selectPlan('Beginner Plan'); return false;" class="subscribe-btn">Subscribe</a>
         </div>
 
         <div class="plan-box elite-plan">
@@ -262,7 +314,7 @@ $conn->close();
                 <li>Diet Tracker</li>
                 <li>Personal Coach</li>
             </ul>
-            <a href="details.php" class="subscribe-btn">Subscribe</a>
+            <a href="#" onclick="selectPlan('Elite Plan'); return false;" class="subscribe-btn">Subscribe</a>
         </div>
 
         <div class="plan-box">
@@ -276,7 +328,7 @@ $conn->close();
                 <li>Dynamic Diet</li>
                 <li>Diet Tracker</li>
             </ul>
-            <a href="details.php" class="subscribe-btn">Subscribe</a>
+            <a href="#" onclick="selectPlan('Advanced Plan'); return false;" class="subscribe-btn">Subscribe</a>
         </div>
     </div>
 
