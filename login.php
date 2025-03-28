@@ -15,7 +15,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         exit();
     }
 
-    $stmt = $conn->prepare("SELECT user_email, user_password FROM userstable WHERE user_email = ?");
+    $stmt = $conn->prepare("SELECT user_email, user_password, user_name FROM userstable WHERE user_email = ?");
     $stmt->bind_param("s", $email);
     $stmt->execute();
     $result = $stmt->get_result();
@@ -25,6 +25,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         
         if (password_verify($password, $user["user_password"])) {
             $_SESSION["user_email"] = $user["user_email"];
+            $_SESSION["user_name"] = $user["user_name"];
             $_SESSION["logged_in"] = true;
             
             header("Location: subscription.php");

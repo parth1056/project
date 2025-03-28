@@ -46,6 +46,7 @@ $conn->close();
     .welcome-text {
       color: white;
       font-size: 18px;
+      padding-right: 60px;
     }
     
     .user-actions {
@@ -143,7 +144,7 @@ $conn->close();
       <button>About Us</button>
     </nav>
     <div class="user-menu">
-      <span class="welcome-text">Welcome, <?php echo htmlspecialchars($user_email); ?></span>
+      <span class="welcome-text">Welcome, <?php echo htmlspecialchars($_SESSION["user_name"]); ?></span>
       <div class="user-actions">
         <button class="profile-btn" onclick="openProfile()">Profile</button>
         <a href="logout.php" class="logout-btn">Logout</a>

@@ -7,6 +7,8 @@ if (!isset($_SESSION["user_email"]) || !isset($_SESSION["logged_in"])) {
 }
 
 $user_email = $_SESSION["user_email"];
+$user_name = $_SESSION["user_name"];
+
 
 $conn = new mysqli("localhost", "root", "", "parth");
 
@@ -260,7 +262,7 @@ $conn->close();
         <img src="assets/logo.png" alt="FitFlex Logo" class="logo">
         <span class="brand-name">FitFlex</span>
         <div class="user-info">
-            <span>Welcome, <?php echo htmlspecialchars($user_email); ?></span>
+            <span>Welcome, <?php echo htmlspecialchars($user_name); ?></span>
             <a href="logout.php" class="logout-btn">Logout</a>
         </div>
     </header>
