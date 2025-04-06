@@ -44,7 +44,7 @@ if ($stmt->execute()) {
     $_SESSION["user_email"] = $email;
     $_SESSION["user_name"] = $name;
     $_SESSION["logged_in"] = true;
-    
+
     header("Location: subscription.php");
     exit();
 } else {
@@ -54,4 +54,3 @@ if ($stmt->execute()) {
 
 $stmt->close();
 $conn->close();
-?>

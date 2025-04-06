@@ -35,7 +35,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       $stmt->bind_param("sd", $user_email, $target_weight);
       $stmt->execute();
 
-      $preferred_days = 3; 
+      $preferred_days = 3;
       switch ($activity) {
         case 'bmr':
           $preferred_days = 1;
@@ -113,18 +113,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
     }
 
     .logo {
-      width: 164.35px;
+      width: 210.35px;
       height: 130px;
       padding-left: 20px;
-    }
-
-    .brand-name {
-      color: white;
-      font-size: 40px;
-      font-weight: bold;
-      display: flex;
-      align-items: center;
-      margin-left: 16px;
     }
 
     .form-container {
@@ -263,6 +254,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       margin-left: 10px;
       text-decoration: none;
       font-size: 0.9em;
+      margin-right: 20px;
     }
 
     @media (max-width: 768px) {
@@ -295,7 +287,6 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 <body>
   <header>
     <img src="assets/logo.png" alt="FitFlex Logo" class="logo">
-    <span class="brand-name">FitFlex</span>
     <div class="user-info">
       <span>Welcome, <?php echo htmlspecialchars($_SESSION["user_name"]); ?></span>
       <a href="logout.php" class="logout-btn">Logout</a>
@@ -365,7 +356,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
       </div>
 
       <div class="button-row">
-        <a href="subscription.html" class="form-button">Back</a>
+        <a href="login.html" class="form-button">Back</a>
         <button type="submit" class="form-button next">Submit</button>
       </div>
     </form>

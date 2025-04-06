@@ -28,29 +28,29 @@ if ($result->num_rows > 0) {
 
 if ($_SERVER["REQUEST_METHOD"] == "POST" && isset($_POST['selected_plan'])) {
     $selected_plan = $_POST['selected_plan'];
-    
+
     $plan_details = [
         'Starter Plan' => ['length' => 30, 'price' => 0],
         'Beginner Plan' => ['length' => 90, 'price' => 500],
         'Advanced Plan' => ['length' => 180, 'price' => 1000],
         'Elite Plan' => ['length' => 365, 'price' => 5000]
     ];
-    
+
     if (isset($plan_details[$selected_plan])) {
         $plan_length = $plan_details[$selected_plan]['length'];
         $plan_price = $plan_details[$selected_plan]['price'];
         $start_date = date('Y-m-d');
-        
+
         $insert_stmt = $conn->prepare("INSERT INTO usersubscription (user_email, start_date, plan_length, plan_price) VALUES (?, ?, ?, ?)");
         $insert_stmt->bind_param("ssid", $user_email, $start_date, $plan_length, $plan_price);
-        
+
         if ($insert_stmt->execute()) {
             header("Location: details.php");
             exit();
         } else {
             $error_message = "Error processing subscription: " . $insert_stmt->error;
         }
-        
+
         $insert_stmt->close();
     }
 }
@@ -60,13 +60,14 @@ $conn->close();
 
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>FitFlex Plan Selection</title>
     <style>
         body {
-            font-family: 'Arial', sans-serif; 
+            font-family: 'Arial', sans-serif;
             margin: 0;
             padding: 0;
             background-color: #f4f4f4;
@@ -88,7 +89,7 @@ $conn->close();
         }
 
         .logo {
-            width: 164.35px;
+            width: 210.35px;
             height: 130px;
             padding-left: 20px;
         }
@@ -119,25 +120,26 @@ $conn->close();
             margin-left: 10px;
             text-decoration: none;
             font-size: 0.9em;
+            margin-right: 16px;
         }
 
         h1 {
             color: #333;
-            margin-bottom: 25px; 
+            margin-bottom: 25px;
             font-size: 2em;
-            letter-spacing: 1px; 
+            letter-spacing: 1px;
         }
 
         .plans-container {
             display: flex;
             gap: 15px;
             max-width: 1200px;
-            padding: 15px; 
+            padding: 15px;
         }
 
         .plan-box {
             background-color: #fff;
-            border-radius: 5px; 
+            border-radius: 5px;
             box-shadow: 0 0 8px rgba(0, 0, 0, 0.1);
             text-align: center;
             padding: 15px;
@@ -149,27 +151,28 @@ $conn->close();
             color: #333;
             font-size: 1.3em;
             margin-top: 0;
-            margin-bottom: 10px; 
+            margin-bottom: 10px;
             font-weight: bold;
         }
 
         .price {
             font-size: 2.2em;
-            color: #ffc107; 
-            margin: 8px 0; 
+            color: #ffc107;
+            margin: 8px 0;
             font-weight: bold;
         }
 
-        .price sup, .price span {
-            font-size: 0.45em; 
+        .price sup,
+        .price span {
+            font-size: 0.45em;
             vertical-align: top;
         }
 
         .description {
             color: #666;
-            margin-bottom: 15px; 
+            margin-bottom: 15px;
             font-size: 0.9em;
-            line-height: 1.3; 
+            line-height: 1.3;
         }
 
         .features {
@@ -182,11 +185,11 @@ $conn->close();
             margin-bottom: 6px;
             color: #555;
             font-size: 0.9em;
-            line-height: 1.2; 
+            line-height: 1.2;
         }
 
         .features li::before {
-            content: '✔ '; 
+            content: '✔ ';
             color: green;
             display: inline-block;
             width: 1em;
@@ -197,8 +200,8 @@ $conn->close();
             background-color: #ffc107;
             color: black;
             border: none;
-            padding: 8px 18px; 
-            border-radius: 4px; 
+            padding: 8px 18px;
+            border-radius: 4px;
             cursor: pointer;
             font-size: 0.95em;
             transition: background-color 0.3s;
@@ -207,16 +210,18 @@ $conn->close();
         }
 
         .subscribe-btn:hover {
-            background-color: #e6ac00; 
+            background-color: #e6ac00;
         }
 
         .plan-box.elite-plan {
-            background-color: #fff5cc; 
-            border: 2px solid #ffc107; 
+            background-color: #fff5cc;
+            border: 2px solid #ffc107;
         }
+
         .plan-box.elite-plan .price {
-            color: #ffc107; 
+            color: #ffc107;
         }
+
         .plan-box.elite-plan .subscribe-btn {
             background-color: #ffc107;
         }
@@ -226,13 +231,16 @@ $conn->close();
                 flex-direction: column;
                 align-items: center;
             }
+
             .plan-box {
                 width: 90%;
             }
+
             .user-info {
                 margin: 10px auto;
                 flex-direction: column;
             }
+
             .logout-btn {
                 margin-top: 5px;
                 margin-left: 0;
@@ -244,23 +252,23 @@ $conn->close();
             var form = document.createElement('form');
             form.method = 'post';
             form.action = '';
-            
+
             var input = document.createElement('input');
             input.type = 'hidden';
             input.name = 'selected_plan';
             input.value = planName;
-            
+
             form.appendChild(input);
             document.body.appendChild(form);
             form.submit();
         }
     </script>
 </head>
+
 <body>
 
     <header>
         <img src="assets/logo.png" alt="FitFlex Logo" class="logo">
-        <span class="brand-name">FitFlex</span>
         <div class="user-info">
             <span>Welcome, <?php echo htmlspecialchars($user_name); ?></span>
             <a href="logout.php" class="logout-btn">Logout</a>
@@ -269,8 +277,8 @@ $conn->close();
 
     <?php
     if (isset($error_message)) {
-        echo "<div style='color: red; text-align: center; margin-top: 20px;'>" . 
-             htmlspecialchars($error_message) . "</div>";
+        echo "<div style='color: red; text-align: center; margin-top: 20px;'>" .
+            htmlspecialchars($error_message) . "</div>";
     }
     ?>
 
@@ -335,4 +343,5 @@ $conn->close();
     </div>
 
 </body>
+
 </html>

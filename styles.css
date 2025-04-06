@@ -16,17 +16,8 @@ body {
   }
   
   .logo {
-    width: 164.35px;
+    width: 210.35px;
     height: 130px;
-  }
-  
-  .brand-name {
-    color: white;
-    font-size: 40px;
-    font-weight: bold;
-    display: flex;
-    align-items: center;
-    margin-left: 16px;
   }
   
   .nav {
@@ -111,12 +102,14 @@ body {
     align-items: center;
     justify-content: space-between;
     margin-top: 20px;
-    padding: 0 10%;
+    padding: 0 10px;
   }
   
   .step-image {
-    width: 810.81px;
+    width: 1090px;
     height: 520px;
+    border-radius: 30px;
+    border: 1px solid black;
   }
   
   .step-text {
@@ -149,8 +142,8 @@ body {
   }
   
   .step-image-right {
-    width: 685px;
-    height: 480px;
+    width: 560px;
+    height: 540px;
     margin-left: 40px;
   }
   
@@ -159,12 +152,12 @@ body {
   }
   
   .step-image-3 {
-    width: 821.04px;
-    height: 454px;
+    width: 770px;
+    height: 675px;
     margin-right: 40px;
   }
   
-  .step-3 .step-text {
+  .step-3 .step-text {  
     margin-left: 0;
     margin-right: 40px;
   }

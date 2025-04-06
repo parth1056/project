@@ -22,13 +22,33 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
     if ($result->num_rows === 1) {
         $user = $result->fetch_assoc();
-        
+
         if (password_verify($password, $user["user_password"])) {
             $_SESSION["user_email"] = $user["user_email"];
             $_SESSION["user_name"] = $user["user_name"];
             $_SESSION["logged_in"] = true;
-            
-            header("Location: subscription.php");
+
+            $subQuery = $conn->prepare("SELECT * FROM usersubscription WHERE user_email = ?");
+            $subQuery->bind_param("s", $email);
+            $subQuery->execute();
+            $subResult = $subQuery->get_result();
+
+            if ($subResult->num_rows === 0) {
+                header("Location: subscription.php");
+                exit();
+            }
+
+            $targetQuery = $conn->prepare("SELECT * FROM usertarget WHERE user_email = ?");
+            $targetQuery->bind_param("s", $email);
+            $targetQuery->execute();
+            $targetResult = $targetQuery->get_result();
+
+            if ($targetResult->num_rows === 0) {
+                header("Location: details.php");
+                exit();
+            }
+
+            header("Location: dashboard.php");
             exit();
         } else {
             echo "<script>alert('Invalid email or password.'); window.location.href='login.html';</script>";
@@ -46,4 +66,3 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 }
 
 $conn->close();
-?>

@@ -1,12 +1,14 @@
 <?php session_start(); ?>
 <!DOCTYPE html>
 <html lang="en">
+
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>FitFlex Login</title>
   <link rel="stylesheet" href="styles1.css">
 </head>
+
 <body>
   <div class="login-page">
     <div class="login-container">
@@ -20,7 +22,9 @@
       </form>
 
       <?php if (isset($_SESSION["error"])): ?>
-          <p style="color: red; text-align: center;"><?php echo $_SESSION["error"]; unset($_SESSION["error"]); ?></p>
+      <p style="color: red; text-align: center;">
+        <?php echo $_SESSION["error"]; unset($_SESSION["error"]); ?>
+      </p>
       <?php endif; ?>
 
       <div class="social-login">
@@ -38,7 +42,7 @@
         </div>
       </div>
       <div class="signup-section">
-        <p style="color: rgb(255, 255, 255);">Don't have an account? 
+        <p style="color: rgb(255, 255, 255);">Don't have an account?
           <a href="registration_page.html" class="register-link">Sign Up!</a>
         </p>
       </div>
@@ -48,4 +52,5 @@
     <p>&copy; 2025 FitFlex. All Rights Reserved.</p>
   </footer>
 </body>
+
 </html>
