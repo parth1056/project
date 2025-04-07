@@ -1,0 +1,172 @@
+body {
+    margin: 0;
+    padding: 0;
+    font-family: Arial, sans-serif;
+    overflow-x: hidden;
+  }
+  
+  header {
+    background: black;
+    width: 100%;
+    height: 178px;
+    display: flex;
+    align-items: center;
+    padding: 0 20px;
+    justify-content: space-between;
+  }
+  
+  .logo {
+    width: 210.35px;
+    height: 130px;
+  }
+  
+  .nav {
+    display: flex;
+    gap: 15px;
+    margin-left: auto;
+    margin-right: 25px;
+  }
+  
+  .nav button {
+    background: none;
+    border: none;
+    color: white;
+    font-size: 18px;
+    height: 30px;
+    cursor: pointer;
+  }
+  
+  .login-btn {
+    background: yellow;
+    color: black;
+    border: none;
+    font-size: 24px;
+    width: 91px;
+    height: 52px;
+    margin-right: 40px;
+    border-radius: 10px;
+    cursor: pointer;
+  }
+  
+  .hero-section {
+    background: url('assets/bg1.png') no-repeat center center/cover;
+    width: 100vw;
+    height: 865px;
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding-left: 10px;
+  }
+  
+  .hero-content {
+    background: rgba(255, 255, 255, 0.8);
+    width: 644px;
+    height: 286px;
+    padding: 20px;
+    text-align: center;
+  }
+  
+  .hero-content h1 {
+    font-size: 36px;
+    font-weight: bold;
+    margin-bottom: 20px;
+  }
+  
+  .hero-subtext {
+    font-size: 16px;
+    width: 100%;
+    max-width: 600px;
+    margin: 0 auto 20px;
+  }
+  
+  .join-btn {
+    background: black;
+    color: white;
+    border: none;
+    font-size: 20px;
+    width: 85px;
+    height: 50px;
+    cursor: pointer;
+    border-radius: 10px;
+  }
+  
+  .health-goals-text {
+    font-size: 40px;
+    font-weight: bold;
+    text-align: center;
+    margin-top: 40px;
+  }
+  
+  .step-section {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    margin-top: 20px;
+    padding: 0 10px;
+  }
+  
+  .step-image {
+    width: 1090px;
+    height: 520px;
+    border-radius: 30px;
+    border: 1px solid black;
+  }
+  
+  .step-text {
+    width: 448px;
+    height: 74px;
+    margin-left: 40px;
+  }
+  
+  .step-number {
+    font-size: 80px;
+    font-weight: bold;
+    color: rgb(255, 238, 0);
+    display: block;
+  }
+  
+  .step-text h3 {
+    font-size: 36px;
+    font-weight: bold;
+    margin: 0;
+  }
+  
+  .step-text p {
+    font-size: 20px;
+    color: #555;
+    margin-top: 10px;
+  }
+  
+  .step-2 {
+    flex-direction: row;
+  }
+  
+  .step-image-right {
+    width: 560px;
+    height: 540px;
+    margin-left: 40px;
+  }
+  
+  .step-3 {
+    flex-direction: row;
+  }
+  
+  .step-image-3 {
+    width: 770px;
+    height: 675px;
+    margin-right: 40px;
+  }
+  
+  .step-3 .step-text {  
+    margin-left: 0;
+    margin-right: 40px;
+  }
+  
+  footer {
+    background: #333;
+    color: #ffffff;
+    text-align: center;
+    padding: 10px 0;
+    font-size: 14px;
+  }
+  

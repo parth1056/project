@@ -1,0 +1,53 @@
+<?php session_start(); ?>
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>FitFlex Login</title>
+  <link rel="stylesheet" href="styles1.css">
+</head>
+
+<body>
+  <div class="login-page">
+    <div class="login-container">
+      <a href="./landing.php"><img src="assets/logo.png" alt="Old FitFlex Logo" class="old-logo"></a>
+      <h2 style="color: rgb(255, 255, 255);">Sign In</h2>
+      <form action="login.php" method="POST">
+        <input type="email" name="email" placeholder="Email" required>
+        <input type="password" name="password" placeholder="Password" required>
+        <a href="#" class="forgot-password">Forgot Password?</a>
+        <button type="submit" class="sign-in-btn">Sign In</button>
+      </form>
+
+      <?php if (isset($_SESSION["error"])): ?>
+      <p style="color: red; text-align: center;">
+        <?php echo $_SESSION["error"]; unset($_SESSION["error"]); ?>
+      </p>
+      <?php endif; ?>
+
+      <div class="social-login">
+        <p style="color: rgb(255, 255, 255);">Continue with</p>
+        <div class="social-buttons">
+          <button class="social-btn google-btn">
+            <img src="assets/google.png" alt="Google">
+          </button>
+          <button class="social-btn facebook-btn">
+            <img src="assets/facebook.png" alt="Facebook">
+          </button>
+        </div>
+      </div>
+      <div class="signup-section">
+        <p style="color: rgb(255, 255, 255);">Don't have an account?
+          <a href="registration_page.html" class="register-link">Sign Up!</a>
+        </p>
+      </div>
+    </div>
+  </div>
+  <footer>
+    <p>&copy; 2025 FitFlex. All Rights Reserved.</p>
+  </footer>
+</body>
+
+</html>
