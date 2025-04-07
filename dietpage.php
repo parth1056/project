@@ -19,9 +19,13 @@ if (!isset($_SESSION["nutritionList"])) {
 
 $feedback = "";
 $apiKey = "1MjVyE4++leUa2iRMXPiOQ==aZSLs6REOYYpkFTj";
-$current_meal_time = isset($_POST["meal_time"]) ? $_POST["meal_time"] : "Breakfast";
 
-if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["query"])) {
+$selected_date = isset($_GET["date"]) ? $_GET["date"] : date("Y-m-d");
+$current_meal_time = isset($_GET["meal_time"]) ? $_GET["meal_time"] : "Breakfast";
+
+$is_today = ($selected_date == date("Y-m-d"));
+
+if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["query"]) && $is_today) {
     $query = trim($_POST["query"]);
     if (!empty($query)) {
         $encodedQuery = urlencode($query);
@@ -58,7 +62,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["query"])) {
                     "fiber_g" => $item["fiber_g"] ?? 0,
                     "quantity" => 1,
                     "meal_time" => $current_meal_time,
-                    "meal_date" => date("Y-m-d")
+                    "meal_date" => $selected_date
                 ];
 
                 $stmt = $conn->prepare("INSERT INTO userdiet (user_email, calorie_intake, food_category, quantity, meal_time, meal_date, protein_g, carbohydrates_g, fat_g) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)");
@@ -89,11 +93,11 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["query"])) {
     } else {
         $feedback = "Please enter a food item.";
     }
-    header("Location: " . $_SERVER['PHP_SELF'] . "?feedback=" . urlencode($feedback) . "&meal_time=" . urlencode($current_meal_time));
+    header("Location: " . $_SERVER['PHP_SELF'] . "?feedback=" . urlencode($feedback) . "&meal_time=" . urlencode($current_meal_time) . "&date=" . urlencode($selected_date));
     exit();
 }
 
-if (isset($_GET["delete"])) {
+if (isset($_GET["delete"]) && $is_today) {
     $index = (int)$_GET["delete"];
     if (isset($_SESSION["nutritionList"][$index])) {
         $food_item = $_SESSION["nutritionList"][$index];
@@ -112,13 +116,13 @@ if (isset($_GET["delete"])) {
         array_splice($_SESSION["nutritionList"], $index, 1);
         $feedback = "Item removed.";
     }
-    header("Location: " . $_SERVER['PHP_SELF'] . "?feedback=" . urlencode($feedback) . "&meal_time=" . urlencode($current_meal_time));
+    header("Location: " . $_SERVER['PHP_SELF'] . "?feedback=" . urlencode($feedback) . "&meal_time=" . urlencode($current_meal_time) . "&date=" . urlencode($selected_date));
     exit();
 }
-if (isset($_GET["update"])) {
+
+if (isset($_GET["update"]) && $is_today) {
     $index = (int)$_GET["update"];
     $change = (int)$_GET["change"];
-    $selected_meal_time = isset($_GET["meal_time"]) ? $_GET["meal_time"] : "Breakfast";
 
     if (isset($_SESSION["nutritionList"][$index])) {
         $food_item = $_SESSION["nutritionList"][$index];
@@ -153,7 +157,7 @@ if (isset($_GET["update"])) {
 
         $_SESSION["nutritionList"][$index]["quantity"] = $new_quantity;
     }
-    header("Location: " . $_SERVER['PHP_SELF'] . "?meal_time=" . urlencode($selected_meal_time));
+    header("Location: " . $_SERVER['PHP_SELF'] . "?meal_time=" . urlencode($current_meal_time) . "&date=" . urlencode($selected_date));
     exit();
 }
 
@@ -165,10 +169,8 @@ if (isset($_GET['feedback'])) {
     $feedback = htmlspecialchars($_GET['feedback']);
 }
 
-$current_date = date("Y-m-d");
-
 $stmt = $conn->prepare("SELECT * FROM userdiet WHERE user_email = ? AND meal_date = ? AND meal_time = ?");
-$stmt->bind_param("sss", $user_email, $current_date, $current_meal_time);
+$stmt->bind_param("sss", $user_email, $selected_date, $current_meal_time);
 $stmt->execute();
 $result = $stmt->get_result();
 
@@ -205,6 +207,14 @@ foreach ($_SESSION["nutritionList"] as $item) {
 }
 $remainingCalories = $targetCalories - $totalCalories;
 
+$today_ts = strtotime(date("Y-m-d"));
+$date_buttons = [
+    strtotime("-3 days", $today_ts),
+    strtotime("-2 days", $today_ts),
+    strtotime("-1 day", $today_ts),
+    $today_ts
+];
+
 $conn->close();
 ?>
 
@@ -219,6 +229,9 @@ $conn->close();
     <link rel="preconnect" href="https://fonts.googleapis.com">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link href="https://fonts.googleapis.com/css2?family=Poppins:wght@400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+    <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/flatpickr"></script>
 
     <style>
         body {
@@ -409,7 +422,12 @@ $conn->close();
             color: #343a40;
         }
 
-        .date-selector .date-box {
+        .date-selector {
+            display: flex;
+            align-items: center;
+        }
+
+        .date-box {
             background-color: #e9ecef;
             padding: 10px 15px;
             border-radius: 8px;
@@ -419,16 +437,47 @@ $conn->close();
             font-weight: 500;
             cursor: pointer;
             transition: background-color 0.2s ease;
+            text-decoration: none;
         }
 
-        .date-selector .date-box span {
+        .date-box:hover {
+            background-color: #dee2e6;
+        }
+
+        .date-box span {
             display: block;
             font-size: 0.8rem;
         }
 
-        .date-selector .date-box.active {
+        .date-box.active {
             background-color: #fd7e14;
             color: white;
+        }
+
+        .calendar-btn {
+            background-color: #e9ecef;
+            padding: 10px 14px;
+            border-radius: 8px;
+            margin-right: 5px;
+            color: #495057;
+            cursor: pointer;
+            transition: background-color 0.2s ease;
+            border: none;
+        }
+
+        .calendar-btn:hover {
+            background-color: #dee2e6;
+        }
+
+        .calendar-picker {
+            position: relative;
+        }
+
+        #datePicker {
+            position: absolute;
+            opacity: 0;
+            height: 1px;
+            width: 1px;
         }
 
         .calories-bar {
@@ -651,12 +700,20 @@ $conn->close();
         .fats-bar .nutrient-bar-fill {
             background-color: #fd7e14;
         }
+
+        .past-date-notice {
+            background-color: #ffe8cc;
+            border-left: 4px solid #fd7e14;
+            padding: 10px 15px;
+            margin-bottom: 20px;
+            border-radius: 4px;
+            font-size: 0.9rem;
+            color: #864400;
+        }
     </style>
 </head>
 
 <body>
-
-
     <header>
         <a href="./dashboard.php"><img src="assets/logo.png" alt="FitFlex Logo" class="logo"></a>
         <nav class="nav">
@@ -697,19 +754,38 @@ $conn->close();
             <div class="col-md-6">
                 <h1 class="section-title">Daily <br> Nutrition</h1>
             </div>
-            <div class="col-md-6 d-flex justify-content-md-end justify-content-center date-selector">
-                <?php
-                $today = time();
-                $dates = [-2, -1, 0, 1];
-                foreach ($dates as $offset) {
-                    $ts = strtotime("$offset day", $today);
-                    $day = date('d', $ts);
-                    $month = date('M', $ts);
-                    echo "<div class='date-box " . ($offset == 0 ? 'active' : '') . "'>";
-                    echo "<span>$month</span> $day";
-                    echo "</div>";
-                }
-                ?>
+            <div class="col-md-6 d-flex justify-content-md-end justify-content-center">
+                <div class="date-selector">
+                    <div class="calendar-picker">
+                        <button class="calendar-btn" id="calendarToggle">
+                            <i class="fas fa-calendar-alt"></i>
+                        </button>
+                        <input type="text" id="datePicker" value="<?= $selected_date ?>">
+                    </div>
+                    <?php
+                    foreach ($date_buttons as $index => $ts) {
+                        $date_str = date('Y-m-d', $ts);
+                        $day = date('d', $ts);
+                        $month = date('M', $ts);
+                        $active = ($date_str == $selected_date) ? 'active' : '';
+                        $label = '';
+                        
+                        if ($index === 0) {
+                            $label = '3 days ago';
+                        } elseif ($index === 1) {
+                            $label = '2 days ago';
+                        } elseif ($index === 2) {
+                            $label = 'Yesterday';
+                        } else {
+                            $label = 'Today';
+                        }
+                        
+                        echo "<a href='?date={$date_str}&meal_time={$current_meal_time}' class='date-box {$active}'>";
+                        echo "<span>{$month}</span> {$day}<span>{$label}</span>";
+                        echo "</a>";
+                    }
+                    ?>
+                </div>
             </div>
         </div>
 
@@ -719,126 +795,190 @@ $conn->close();
             </div>
         </div>
 
+        <?php if ($selected_date != date('Y-m-d')): ?>
+        <div class="past-date-notice">
+            <i class="fas fa-info-circle"></i> You are viewing nutrition data for <?= date('F j, Y', strtotime($selected_date)) ?>. Food entries cannot be modified for past dates.
+        </div>
+        <?php endif; ?>
+
         <div class="row justify-content-center mb-3">
             <div class="col-auto">
                 <ul class="nav meal-tabs">
                     <li class="nav-item">
-                        <a class="nav-link <?= $current_meal_time == 'Breakfast' ? 'active' : '' ?>" href="?meal_time=Breakfast">Breakfast</a>
+                        <a class="nav-link <?= $current_meal_time == 'Breakfast' ? 'active' : '' ?>" href="?meal_time=Breakfast&date=<?= $selected_date ?>">Breakfast</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link <?= $current_meal_time == 'Lunch' ? 'active' : '' ?>" href="?meal_time=Lunch">Lunch</a>
+                        <a class="nav-link <?= $current_meal_time == 'Lunch' ? 'active' : '' ?>" href="?meal_time=Lunch&date=<?= $selected_date ?>">Lunch</a>
                     </li>
                     <li class="nav-item">
-                        <a class="nav-link <?= $current_meal_time == 'Dinner' ? 'active' : '' ?>" href="?meal_time=Dinner">Dinner</a>
+                        <a class="nav-link <?= $current_meal_time == 'Dinner' ? 'active' : '' ?>" href="?meal_time=Dinner&date=<?= $selected_date ?>">Dinner</a>
                     </li>
                 </ul>
             </div>
         </div>
 
         <div class="row align-items-center mb-4">
-            <div class="col-md-5 text-center text-md-start mb-3 mb-md-0">
+            <div class="col text-center">
                 <div class="total-calories-display">
-                    Total Calories = <?= round($totalCalories) ?>
+                    <i class="fas fa-fire-alt me-2"></i> <?= round($totalCalories) ?> calories
                 </div>
-            </div>
-            <div class="col-md-7">
-                <form method="POST" class="add-food-form">
-                    <div class="input-group">
-                        <input type="text" class="form-control" name="query" placeholder="Add Food (e.g., '1 apple' or '100g salmon')" required>
-                        <input type="hidden" name="meal_time" value="<?= $current_meal_time ?>">
-                        <button type="submit">Search & Add</button>
-                    </div>
-                </form>
             </div>
         </div>
 
-        <?php if (!empty($feedback)): ?>
-            <div class="alert alert-info alert-dismissible fade show feedback-alert" role="alert">
-                <?= $feedback ?>
-                <button type="button" class="btn-close" data-bs-dismiss="alert" aria-label="Close"></button>
+        <?php if ($is_today): ?>
+        <form method="post" class="add-food-form">
+            <div class="input-group">
+                <input type="text" name="query" class="form-control" placeholder="Search for a food (e.g., 100g chicken breast)" required>
+                <button type="submit" class="btn">
+                    <i class="fas fa-plus me-2"></i> Add Food
+                </button>
             </div>
+        </form>
         <?php endif; ?>
 
-        <div class="food-list">
-            <?php if (empty($_SESSION["nutritionList"])): ?>
-                <p class="text-center text-muted mt-4">Your nutrition list is empty. Add some food!</p>
-            <?php else: ?>
-                <?php foreach ($_SESSION["nutritionList"] as $index => $item):
-                    $quantity = $item["quantity"] ?? 1;
-                    $itemName = $item['name'] ?? 'Unknown Item';
-                    $servingSize = $item['serving_size_g'] ?? 100;
-                    $calories = ($item['calories'] ?? 0);
-                    $protein = ($item['protein_g'] ?? 0);
-                    $carbs = ($item['carbohydrates_total_g'] ?? 0);
-                    $fats = ($item['fat_total_g'] ?? 0);
-                ?>
-                    <div class="card food-item-card">
-                        <div class="card-body">
-                            <div class="row align-items-center">
-                                <div class="col-lg-4 col-md-5 food-item-details">
-                                    <h5><?= htmlspecialchars(ucfirst($itemName)) ?></h5>
-                                    <p class="text-muted mb-2">
-                                        🔥 <?= round($calories * $quantity) ?> kcal
-                                        <?php if ($servingSize > 1): ?>
-                                            - <?= round($servingSize * $quantity) ?>g
-                                        <?php endif; ?>
-                                    </p>
-                                    <div class="quantity-controls mt-2">
-                                        <a href="?update=<?= $index ?>&change=-1&meal_time=<?= urlencode($current_meal_time) ?>" class="btn btn-sm">-</a>
-                                        <span><?= $quantity ?></span>
-                                        <a href="?update=<?= $index ?>&change=1&meal_time=<?= urlencode($current_meal_time) ?>" class="btn btn-sm">+</a>
-                                        <a href="?delete=<?= $index ?>&meal_time=<?= urlencode($current_meal_time) ?>" class="btn btn-sm btn-delete" onclick="return confirm('Are you sure you want to remove this item?');">✕</a>
-                                    </div>
-                                </div>
+        <?php if (!empty($feedback)): ?>
+        <div class="alert alert-info feedback-alert">
+            <?= $feedback ?>
+        </div>
+        <?php endif; ?>
 
-                                <div class="col-lg-8 col-md-7">
-                                    <div class="row justify-content-end">
-                                        <div class="col-auto nutrient-info protein">
-                                            <div class="nutrient-bar protein-bar">
-                                                <div class="nutrient-bar-fill" style="height: <?= min(($protein * $quantity / 30) * 100, 100) ?>%;"></div>
-                                            </div>
-                                            <strong><?= round($protein * $quantity) ?>g</strong>
-                                            <span>Protein</span>
-                                        </div>
-                                        <div class="col-auto nutrient-info carbs">
-                                            <div class="nutrient-bar carbs-bar">
-                                                <div class="nutrient-bar-fill" style="height: <?= min(($carbs * $quantity / 60) * 100, 100) ?>%;"></div>
-                                            </div>
-                                            <strong><?= round($carbs * $quantity) ?>g</strong>
-                                            <span>Carbs</span>
-                                        </div>
-                                        <div class="col-auto nutrient-info fats">
-                                            <div class="nutrient-bar fats-bar">
-                                                <div class="nutrient-bar-fill" style="height: <?= min(($fats * $quantity / 20) * 100, 100) ?>%;"></div>
-                                            </div>
-                                            <strong><?= round($fats * $quantity) ?>g</strong>
-                                            <span>Fats</span>
-                                        </div>
-                                    </div>
+        <div class="row">
+            <div class="col">
+                <?php if (empty($_SESSION["nutritionList"])): ?>
+                <div class="text-center py-5">
+                    <i class="fas fa-utensils fa-3x mb-3 text-muted"></i>
+                    <p class="lead">No food items added for <?= $current_meal_time ?> on <?= date('F j, Y', strtotime($selected_date)) ?>.</p>
+                    <?php if ($is_today): ?>
+                    <p>Use the search box above to add food items.</p>
+                    <?php endif; ?>
+                </div>
+                <?php else: ?>
+                <?php foreach ($_SESSION["nutritionList"] as $index => $item): ?>
+                <div class="food-item-card">
+                    <div class="row align-items-center">
+                        <div class="col-md-4 food-item-details">
+                            <h5><?= htmlspecialchars(ucfirst($item['name'])) ?></h5>
+                            <p class="text-muted"><?= round($item['calories'] * $item['quantity']) ?> kcal
+                                <?php if ($item['quantity'] > 1): ?>
+                                (<?= $item['quantity'] ?> servings)
+                                <?php endif; ?>
+                            </p>
+                        </div>
+                        <div class="col-md-5 d-flex justify-content-around">
+                            <div class="nutrient-info protein">
+                                <div class="nutrient-bar protein-bar">
+                                    <div class="nutrient-bar-fill" style="height: <?= min(100, ($item['protein_g'] * $item['quantity'] / 60) * 100) ?>%"></div>
                                 </div>
+                                <strong><?= round($item['protein_g'] * $item['quantity'], 1) ?>g</strong>
+                                <span>Protein</span>
+                            </div>
+                            <div class="nutrient-info carbs">
+                                <div class="nutrient-bar carbs-bar">
+                                    <div class="nutrient-bar-fill" style="height: <?= min(100, ($item['carbohydrates_total_g'] * $item['quantity'] / 300) * 100) ?>%"></div>
+                                </div>
+                                <strong><?= round($item['carbohydrates_total_g'] * $item['quantity'], 1) ?>g</strong>
+                                <span>Carbs</span>
+                            </div>
+                            <div class="nutrient-info fats">
+                                <div class="nutrient-bar fats-bar">
+                                    <div class="nutrient-bar-fill" style="height: <?= min(100, ($item['fat_total_g'] * $item['quantity'] / 70) * 100) ?>%"></div>
+                                </div>
+                                <strong><?= round($item['fat_total_g'] * $item['quantity'], 1) ?>g</strong>
+                                <span>Fats</span>
+                            </div>
+                        </div>
+                        <div class="col-md-3 quantity-controls text-end">
+                            <?php if ($is_today): ?>
+                            <a href="?update=<?= $index ?>&change=-1&meal_time=<?= urlencode($current_meal_time) ?>&date=<?= urlencode($selected_date) ?>" class="btn">-</a>
+                            <span><?= $item['quantity'] ?></span>
+                            <a href="?update=<?= $index ?>&change=1&meal_time=<?= urlencode($current_meal_time) ?>&date=<?= urlencode($selected_date) ?>" class="btn">+</a>
+                            <a href="?delete=<?= $index ?>&meal_time=<?= urlencode($current_meal_time) ?>&date=<?= urlencode($selected_date) ?>" class="btn btn-delete">
+                                <i class="fas fa-trash-alt"></i>
+                            </a>
+                            <?php endif; ?>
+                        </div>
+                    </div>
+                </div>
+                <?php endforeach; ?>
+                <?php endif; ?>
+            </div>
+        </div>
+
+        <div class="row mt-5">
+            <div class="col-md-4">
+                <div class="card mb-4">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-chart-pie me-2"></i> Nutrient Breakdown</h5>
+                        <div class="d-flex justify-content-around text-center mt-4">
+                            <div>
+                                <h6><?= round($totalProtein) ?>g</h6>
+                                <small class="text-muted">Protein</small>
+                            </div>
+                            <div>
+                                <h6><?= round($totalCarbs) ?>g</h6>
+                                <small class="text-muted">Carbs</small>
+                            </div>
+                            <div>
+                                <h6><?= round($totalFats) ?>g</h6>
+                                <small class="text-muted">Fats</small>
                             </div>
                         </div>
                     </div>
-                <?php endforeach; ?>
-            <?php endif; ?>
+                </div>
+            </div>
+            <div class="col-md-8">
+                <div class="card">
+                    <div class="card-body">
+                        <h5 class="card-title"><i class="fas fa-lightbulb me-2"></i> Tip of the Day</h5>
+                        <p class="card-text">Focus on whole foods like fruits, vegetables, lean proteins, and whole grains. They provide essential nutrients your body needs and help maintain energy levels throughout the day.</p>
+                    </div>
+                </div>
+            </div>
         </div>
-
     </div>
-    <footer>
-        <p>&copy; 2025 FitFlex. All Rights Reserved.</p>
-    </footer>
-    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
 
+    <footer>
+        <div class="container">
+            <p>© 2024 FitFlex. All rights reserved.</p>
+        </div>
+    </footer>
+
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script>
+        const datePicker = flatpickr("#datePicker", {
+            dateFormat: "Y-m-d",
+            maxDate: "today",
+            onChange: function(selectedDates, dateStr) {
+                window.location.href = `?date=${dateStr}&meal_time=<?= urlencode($current_meal_time) ?>`;
+            }
+        });
+
+        document.getElementById('calendarToggle').addEventListener('click', function() {
+            datePicker.open();
+        });
+
         function openProfile() {
-            document.getElementById("profileModal").style.display = "flex";
+            document.getElementById('profileModal').style.display = 'flex';
         }
 
         function closeProfile() {
-            document.getElementById("profileModal").style.display = "none";
+            document.getElementById('profileModal').style.display = 'none';
         }
+
+        window.addEventListener('click', function(event) {
+            const modal = document.getElementById('profileModal');
+            if (event.target === modal) {
+                closeProfile();
+            }
+        });
+
+        document.querySelectorAll('.meal-tabs .nav-link').forEach(link => {
+            if (link.getAttribute('href').includes('meal_time=<?= $current_meal_time ?>')) {
+                link.classList.add('active');
+            } else {
+                link.classList.remove('active');
+            }
+        });
     </script>
-
 </body>
-
 </html>
