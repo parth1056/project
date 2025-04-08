@@ -858,7 +858,7 @@ $conn->close();
                     <div class="row align-items-center">
                         <div class="col-md-4 food-item-details">
                             <h5><?= htmlspecialchars(ucfirst($item['name'])) ?></h5>
-                            <p class="text-muted"><?= round($item['calories'] * $item['quantity']) ?> kcal
+                            <p class="text-muted">🔥<?= round($item['calories'] * $item['quantity']) ?> kcal
                                 <?php if ($item['quantity'] > 1): ?>
                                 (<?= $item['quantity'] ?> servings)
                                 <?php endif; ?>
