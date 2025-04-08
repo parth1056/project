@@ -245,9 +245,9 @@ $conn->close();
   <div class="step-section step-3">
     <img src="assets/bg4.jpg" alt="Select a Workout" class="step-image step-image-3">
     <div class="step-text">
-      <span class="step-number">3</span>
-      <h3>Select a Workout</h3>
-      <p>Custom Workouts with User tracking and time flexibility.</p>
+      <span class="step-number" style="margin-right: 100px;">3</span>
+      <h3 style="margin-right: 100px;">Select a Workout</h3>
+      <p style="margin-right: 100px;">Custom Workouts with User tracking and time flexibility.</p>
     </div>
   </div>
   <br>
