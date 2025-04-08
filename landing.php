@@ -27,7 +27,7 @@
         Join thousands who've achieved their fitness dreams with expert-designed plans and real results. <br>
         Tailored Workouts. Personalized Diets. Proven Success.
       </p>
-      <a href="./registration_page.html"><button class="join-btn">Join Us</button></a>
+      <a href="./registration_page.php"><button class="join-btn">Join Us</button></a>
     </div>
   </div>
 
