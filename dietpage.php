@@ -172,7 +172,7 @@ if (isset($_GET['feedback'])) {
 $stmt = $conn->prepare("SELECT * FROM userdiet WHERE user_email = ? AND meal_date = ? AND meal_time = ?");
 $stmt->bind_param("sss", $user_email, $selected_date, $current_meal_time);
 $stmt->execute();
-$result = $stmt->get_result();
+$result = $stmt->get_result();  
 
 $_SESSION["nutritionList"] = [];
 while ($row = $result->fetch_assoc()) {

@@ -106,10 +106,10 @@ header {
 }
 
 .step-image {
-  width: 1090px;
-  height: 520px;
+  width: 1070px;
+  height: 464.9px;
   border-radius: 30px;
-  border: 1px solid black;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
 }
 
 .step-text {
@@ -156,6 +156,8 @@ header {
   width: 770px;
   height: 675px;
   margin-right: 40px;
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+
 }
 
 .step-3 .step-text {  
