@@ -29,7 +29,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     if (isset($_POST["new_target_weight"])) {
         $new_target_weight = floatval($_POST["new_target_weight"]);
         if ($new_target_weight > 0) {
-            $stmt = $conn->prepare("UPDATE usertarget SET target_weight = ? WHERE user_email = ?");
+            $stmt = $conn->prepare("UPDATE userstable SET target_weight = ? WHERE user_email = ?");
             $stmt->bind_param("ds", $new_target_weight, $user_email);
             $stmt->execute();
             $stmt->close();
@@ -76,7 +76,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST") {
     }
 }
 
-$stmt = $conn->prepare("SELECT u.user_name, u.phone_number, u.user_height, u.user_weight, t.target_weight FROM userstable AS u LEFT JOIN usertarget AS t ON u.user_email = t.user_email WHERE u.user_email = ?");
+$stmt = $conn->prepare("SELECT u.user_name, u.phone_number, u.user_height, u.user_weight, t.target_weight FROM userstable AS u LEFT JOIN userstable AS t ON u.user_email = t.user_email WHERE u.user_email = ?");
 $stmt->bind_param("s", $user_email);
 $stmt->execute();
 $user_result = $stmt->get_result()->fetch_assoc();

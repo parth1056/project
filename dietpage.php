@@ -13,16 +13,16 @@ if ($conn->connect_error) {
 
 $user_email = $_SESSION["user_email"];
 
-if (!isset($_SESSION["nutritionList"])) {
-    $_SESSION["nutritionList"] = [];
+$meal_times = ["Breakfast", "Lunch", "Dinner", "Snacks"]; 
+$current_meal_time = "Breakfast"; 
+if (isset($_GET["meal_time"]) && in_array($_GET["meal_time"], $meal_times)) {
+    $current_meal_time = $_GET["meal_time"];
 }
 
 $feedback = "";
 $apiKey = "1MjVyE4++leUa2iRMXPiOQ==aZSLs6REOYYpkFTj";
 
 $selected_date = isset($_GET["date"]) ? $_GET["date"] : date("Y-m-d");
-$current_meal_time = isset($_GET["meal_time"]) ? $_GET["meal_time"] : "Breakfast";
-
 $is_today = ($selected_date == date("Y-m-d"));
 
 if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["query"]) && $is_today) {
@@ -61,7 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["query"]) && $is_today
                     "fat_total_g" => $item["fat_total_g"] ?? 0,
                     "fiber_g" => $item["fiber_g"] ?? 0,
                     "quantity" => 1,
-                    "meal_time" => $current_meal_time,
+                    "meal_time" => $current_meal_time, 
                     "meal_date" => $selected_date
                 ];
 
@@ -80,7 +80,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["query"]) && $is_today
                 );
 
                 if ($stmt->execute()) {
-                    $feedback = htmlspecialchars(ucfirst($newItem['name'])) . " added successfully!";
+                    $feedback = htmlspecialchars(ucfirst($newItem['name'])) . " added successfully to " . htmlspecialchars($current_meal_time) . "!";
                 } else {
                     $feedback = "Error saving food item to database: " . $conn->error;
                 }
@@ -97,9 +97,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["query"]) && $is_today
 }
 
 if (isset($_GET["delete"]) && $is_today) {
-    $diet_id_to_delete = (int)$_GET["delete"]; 
+    $diet_id_to_delete = (int)$_GET["delete"];
 
-    $stmt_fetch = $conn->prepare("SELECT food_category FROM userdiet WHERE diet_id = ? AND user_email = ? AND meal_date = ?");
+    $stmt_fetch = $conn->prepare("SELECT food_category, meal_time FROM userdiet WHERE diet_id = ? AND user_email = ? AND meal_date = ?");
     $stmt_fetch->bind_param("iss", $diet_id_to_delete, $user_email, $selected_date);
     $stmt_fetch->execute();
     $result_fetch = $stmt_fetch->get_result();
@@ -110,7 +110,7 @@ if (isset($_GET["delete"]) && $is_today) {
         $stmt = $conn->prepare("DELETE FROM userdiet WHERE diet_id = ? AND user_email = ?");
         $stmt->bind_param("is", $diet_id_to_delete, $user_email);
         if ($stmt->execute()) {
-            $feedback = htmlspecialchars(ucfirst($item_to_delete['food_category'])) . " removed.";
+            $feedback = htmlspecialchars(ucfirst($item_to_delete['food_category'])) . " removed from " . htmlspecialchars($item_to_delete['meal_time']) . ".";
         } else {
             $feedback = "Error removing item.";
         }
@@ -118,7 +118,6 @@ if (isset($_GET["delete"]) && $is_today) {
     } else {
          $feedback = "Item not found or cannot be deleted.";
     }
-
     header("Location: " . $_SERVER['PHP_SELF'] . "?feedback=" . urlencode($feedback) . "&meal_time=" . urlencode($current_meal_time) . "&date=" . urlencode($selected_date));
     exit();
 }
@@ -138,47 +137,34 @@ if (isset($_GET["update"]) && $is_today) {
         $current_quantity = $food_item["quantity"];
         $new_quantity = $current_quantity + $change;
 
-        if ($new_quantity < 1) {
-            $new_quantity = 1; 
-        }
+        if ($new_quantity < 1) $new_quantity = 1;
 
-        $base_calories = $food_item["calorie_intake"] / $current_quantity;
-        $base_protein = $food_item["protein_g"] / $current_quantity;
-        $base_carbs = $food_item["carbohydrates_g"] / $current_quantity;
-        $base_fat = $food_item["fat_g"] / $current_quantity;
+        $base_calories = ($current_quantity > 0) ? $food_item["calorie_intake"] / $current_quantity : 0;
+        $base_protein = ($current_quantity > 0) ? $food_item["protein_g"] / $current_quantity : 0;
+        $base_carbs = ($current_quantity > 0) ? $food_item["carbohydrates_g"] / $current_quantity : 0;
+        $base_fat = ($current_quantity > 0) ? $food_item["fat_g"] / $current_quantity : 0;
 
         $new_total_calories = $base_calories * $new_quantity;
         $new_total_protein = $base_protein * $new_quantity;
         $new_total_carbs = $base_carbs * $new_quantity;
         $new_total_fat = $base_fat * $new_quantity;
 
-        $stmt = $conn->prepare("UPDATE userdiet SET calorie_intake = ?, quantity = ?, protein_g = ?, carbohydrates_g = ?, fat_g = ? WHERE diet_id = ? AND user_email = ?");
-        $stmt->bind_param("didddis",
-            $new_total_calories,
-            $new_quantity,
-            $new_total_protein,
-            $new_total_carbs,
-            $new_total_fat,
-            $diet_id_to_update,
-            $user_email
+        $stmt_update = $conn->prepare("UPDATE userdiet SET calorie_intake = ?, quantity = ?, protein_g = ?, carbohydrates_g = ?, fat_g = ? WHERE diet_id = ? AND user_email = ?");
+        $stmt_update->bind_param("didddis",
+            $new_total_calories, $new_quantity, $new_total_protein, $new_total_carbs, $new_total_fat,
+            $diet_id_to_update, $user_email
         );
 
-        if (!$stmt->execute()) {
+        if (!$stmt_update->execute()) {
             $feedback = "Error updating quantity.";
-             error_log("Update Error: " . $stmt->error);
+            error_log("Update Error: " . $stmt_update->error);
         }
-        $stmt->close();
-
+        $stmt_update->close();
     } else {
         $feedback = "Item not found for update.";
     }
     header("Location: " . $_SERVER['PHP_SELF'] . "?feedback=" . urlencode($feedback) . "&meal_time=" . urlencode($current_meal_time) . "&date=" . urlencode($selected_date));
     exit();
-}
-
-
-if (isset($_GET["meal_time"])) {
-    $current_meal_time = $_GET["meal_time"];
 }
 
 if (isset($_GET['feedback'])) {
@@ -247,6 +233,7 @@ $conn->close();
         header .logo { width: 210.35px !important; height: 130px !important; margin: 0 !important; padding: 0 !important; }
         header .nav { display: flex !important; gap: 15px !important; margin-left: auto !important; margin-right: 25px !important; background: transparent !important; padding: 0 !important; flex-wrap: nowrap !important; }
         header .nav button { background: none !important; border: none !important; color: white !important; font-size: 18px !important; height: 30px !important; cursor: pointer !important; margin: 0 !important; padding: 0 6px 0 6px !important; box-shadow: none !important; line-height: normal !important; font-weight: normal !important; font-family: Arial, sans-serif !important; }
+        header .nav a { text-decoration: none; }
         header .user-menu { display: flex !important; flex-direction: column !important; align-items: flex-end !important; margin-left: auto !important; margin-right: 0px !important; gap: 10px !important; padding: 0 !important; padding-right: 2px !important; }
         header .welcome-text { color: white !important; font-size: 18px !important; margin: 0 !important; font-weight: normal !important; font-family: Arial, sans-serif !important; text-align: right !important; width: 100% !important; }
         header .user-actions { display: flex !important; gap: 10px !important; margin: 0 !important; padding: 0 !important; justify-content: center !important; width: 100% !important; }
@@ -366,7 +353,7 @@ $conn->close();
             </div>
         </div>
 
-        <div class="row"><div class="col text-center calories-bar">Remaining = <?= $targetCalories ?> - <?= round($totalCalories) ?> = <?= round($remainingCalories) ?> kcal</div></div>
+        <div class="row"><div class="col text-center calories-bar">Daily Remaining = <?= $targetCalories ?> - <?= round($totalCalories) ?> = <?= round($remainingCalories) ?> kcal</div></div>
 
         <?php if (!$is_today): ?>
         <div class="past-date-notice"><i class="fas fa-info-circle"></i> You are viewing nutrition data for <?= date('F j, Y', strtotime($selected_date)) ?>. Food entries cannot be modified for past dates.</div>
@@ -376,12 +363,13 @@ $conn->close();
             <li class="nav-item"><a class="nav-link <?= $current_meal_time == 'Breakfast' ? 'active' : '' ?>" href="?meal_time=Breakfast&date=<?= $selected_date ?>">Breakfast</a></li>
             <li class="nav-item"><a class="nav-link <?= $current_meal_time == 'Lunch' ? 'active' : '' ?>" href="?meal_time=Lunch&date=<?= $selected_date ?>">Lunch</a></li>
             <li class="nav-item"><a class="nav-link <?= $current_meal_time == 'Dinner' ? 'active' : '' ?>" href="?meal_time=Dinner&date=<?= $selected_date ?>">Dinner</a></li>
+             <li class="nav-item"><a class="nav-link <?= $current_meal_time == 'Snacks' ? 'active' : '' ?>" href="?meal_time=Snacks&date=<?= $selected_date ?>">Snacks</a></li>
         </ul></div></div>
 
         <div class="row align-items-center mb-4"><div class="col text-center"><div class="total-calories-display"><i class="fas fa-fire-alt me-2"></i> <?= round($totalCalories) ?> calories Today</div></div></div>
 
         <?php if ($is_today): ?>
-        <form method="post" class="add-food-form"><div class="input-group"><input type="text" name="query" class="form-control" placeholder="Search for a food (e.g., 100g chicken breast)" required><button type="submit" class="btn"><i class="fas fa-plus me-2"></i> Add Food</button></div></form>
+        <form method="post" class="add-food-form"><div class="input-group"><input type="text" name="query" class="form-control" placeholder="Search for a food (e.g., 100g chicken breast)" required><button type="submit" class="btn"><i class="fas fa-plus me-2"></i> Add Food to <?= htmlspecialchars($current_meal_time) ?></button></div></form>
         <?php endif; ?>
 
         <?php if (!empty($feedback)): ?><div class="alert alert-info feedback-alert"><?= $feedback ?></div><?php endif; ?>
@@ -392,10 +380,6 @@ $conn->close();
             <?php else: ?>
                 <?php foreach ($current_meal_items as $item):
                     $quantity = $item["quantity"] ?? 1;
-                    $base_calories = $quantity > 0 ? $item["calorie_intake"] / $quantity : 0;
-                    $base_protein = $quantity > 0 ? ($item["protein_g"] ?? 0) / $quantity : 0;
-                    $base_carbs = $quantity > 0 ? ($item["carbohydrates_g"] ?? 0) / $quantity : 0;
-                    $base_fat = $quantity > 0 ? ($item["fat_g"] ?? 0) / $quantity : 0;
                 ?>
                 <div class="food-item-card"><div class="row align-items-center">
                     <div class="col-md-4 food-item-details"><h5><?= htmlspecialchars(ucfirst($item['food_category'])) ?></h5><p class="text-muted">🔥<?= round($item['calorie_intake']) ?> kcal <?php if ($item['quantity'] > 1): ?>(<?= $item['quantity'] ?> servings)<?php endif; ?></p></div>
@@ -429,7 +413,7 @@ $conn->close();
         function openProfile() { document.getElementById('profileModal').style.display = 'flex'; }
         function closeProfile() { document.getElementById('profileModal').style.display = 'none'; }
         window.addEventListener('click', function(event) { if (event.target === document.getElementById('profileModal')) { closeProfile(); } });
-        document.querySelectorAll('.meal-tabs .nav-link').forEach(link => { link.classList.toggle('active', link.getAttribute('href').includes('meal_time=<?= $current_meal_time ?>')); });
+<?= $current_meal_time ?>
     </script>
 </body>
 </html>

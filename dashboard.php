@@ -13,7 +13,7 @@ if ($conn->connect_error) {
   die("Connection failed: " . $conn->connect_error);
 }
 
-$stmt = $conn->prepare("SELECT u.user_name, u.phone_number, u.user_height, u.user_weight, t.target_weight FROM userstable AS u LEFT JOIN usertarget AS t ON u.user_email = t.user_email WHERE u.user_email = ?");
+$stmt = $conn->prepare("SELECT u.user_name, u.phone_number, u.user_height, u.user_weight, u.target_weight FROM userstable AS u WHERE u.user_email = ?");
 $stmt->bind_param("s", $user_email);
 $stmt->execute();
 $user_result = $stmt->get_result()->fetch_assoc();

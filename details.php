@@ -1,9 +1,14 @@
 <?php
 session_start();
 
-if (!isset($_SESSION["user_email"]) || !isset($_SESSION["logged_in"])) {
+if (!isset($_SESSION["logged_in"]) || $_SESSION["logged_in"] !== true) {
     header("Location: login.html");
     exit();
+}
+
+$conn = new mysqli("localhost", "root", "", "parth");
+if ($conn->connect_error) {
+    die("Connection failed: " . $conn->connect_error);
 }
 
 $user_email = $_SESSION["user_email"];
@@ -11,12 +16,6 @@ $user_name = $_SESSION["user_name"];
 $error = null;
 
 if ($_SERVER["REQUEST_METHOD"] == "POST") {
-    $conn = new mysqli("localhost", "root", "", "parth");
-
-    if ($conn->connect_error) {
-        die("Connection failed: " . $conn->connect_error);
-    }
-
     $age = filter_input(INPUT_POST, "age", FILTER_VALIDATE_INT, ["options" => ["min_range" => 15, "max_range" => 80]]);
     $gender = $_POST["gender"] ?? null;
     $height = filter_input(INPUT_POST, "height", FILTER_VALIDATE_FLOAT, ["options" => ["min_range" => 100, "max_range" => 250]]);
@@ -38,39 +37,21 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         if ($error === null) {
              $conn->begin_transaction();
              try {
-                 $stmt_user = $conn->prepare("UPDATE userstable SET user_age = ?, user_gender = ?, user_height = ?, user_weight = ? WHERE user_email = ?");
+                 $stmt_user = $conn->prepare("UPDATE userstable SET user_age = ?, user_gender = ?, user_height = ?, user_weight = ?, target_weight = ? WHERE user_email = ?");
                  if (!$stmt_user) throw new Exception("Prepare failed (userstable): " . $conn->error);
-                 $stmt_user->bind_param("issds", $age, $gender, $height, $weight, $user_email);
+                 $stmt_user->bind_param("issdds", $age, $gender, $height, $weight, $target_weight, $user_email); 
                  if (!$stmt_user->execute()) throw new Exception("Execute failed (userstable): " . $stmt_user->error);
                  $stmt_user->close();
 
-                 $stmt_target_check = $conn->prepare("SELECT target_id FROM usertarget WHERE user_email = ?");
-                 if (!$stmt_target_check) throw new Exception("Prepare failed (target check): " . $conn->error);
-                 $stmt_target_check->bind_param("s", $user_email);
-                 $stmt_target_check->execute();
-                 $result_target = $stmt_target_check->get_result();
 
-                 if ($result_target->num_rows > 0) {
-                     $stmt_target = $conn->prepare("UPDATE usertarget SET target_weight = ? WHERE user_email = ?");
-                     if (!$stmt_target) throw new Exception("Prepare failed (target update): " . $conn->error);
-                     $stmt_target->bind_param("ds", $target_weight, $user_email);
-                 } else {
-                     $stmt_target = $conn->prepare("INSERT INTO usertarget (user_email, target_weight) VALUES (?, ?)");
-                     if (!$stmt_target) throw new Exception("Prepare failed (target insert): " . $conn->error);
-                     $stmt_target->bind_param("sd", $user_email, $target_weight);
-                 }
-                 if (!$stmt_target->execute()) throw new Exception("Execute failed (usertarget): " . $stmt_target->error);
-                 $stmt_target->close();
-                 $stmt_target_check->close();
-
-                 $plan_days_val = 3;
+                 $plan_days_val = 3; 
                  switch ($activity) {
-                     case 'bmr': $plan_days_val = 1; break;
-                     case 'sedentary': $plan_days_val = 2; break;
-                     case 'light-exercise': $plan_days_val = 3; break;
-                     case 'moderate-exercise': $plan_days_val = 4; break;
-                     case 'active-exercise': $plan_days_val = 5; break;
-                     case 'very-active-exercise': $plan_days_val = 6; break;
+                     case 'bmr': $plan_days_val = 1; break; 
+                     case 'sedentary': $plan_days_val = 3; break; 
+                     case 'light-exercise': $plan_days_val = 4; break; 
+                     case 'moderate-exercise': $plan_days_val = 5; break; 
+                     case 'active-exercise': $plan_days_val = 6; break; 
+                     case 'very-active-exercise': $plan_days_val = 7; break; 
                  }
                  $exercises_per_day_val = 5; 
 
@@ -84,9 +65,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                  if ($result_planner->num_rows > 0) {
                       $planner_row = $result_planner->fetch_assoc();
                       $planner_id = $planner_row['planner_id'];
-                      $stmt_planner = $conn->prepare("UPDATE workoutplanner SET plan_days = ?, exercises_per_day = ? WHERE user_email = ?");
-                      if (!$stmt_planner) throw new Exception("Prepare failed (planner update): " . $conn->error);
-                      $stmt_planner->bind_param("iis", $plan_days_val, $exercises_per_day_val, $user_email);
+                      $stmt_planner = $conn->prepare("UPDATE workoutplanner SET plan_days = ?, exercises_per_day = ? WHERE planner_id = ?");
+                       if (!$stmt_planner) throw new Exception("Prepare failed (planner update): " . $conn->error);
+                      $stmt_planner->bind_param("iii", $plan_days_val, $exercises_per_day_val, $planner_id);
                  } else {
                       $stmt_planner = $conn->prepare("INSERT INTO workoutplanner (user_email, plan_days, exercises_per_day) VALUES (?, ?, ?)");
                       if (!$stmt_planner) throw new Exception("Prepare failed (planner insert): " . $conn->error);
@@ -95,14 +76,14 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
 
                  if (!$stmt_planner->execute()) throw new Exception("Execute failed (workoutplanner): " . $stmt_planner->error);
                  if ($planner_id === null) {
-                    $planner_id = $conn->insert_id; 
+                    $planner_id = $conn->insert_id;
                  }
                  $stmt_planner->close();
                  $stmt_planner_check->close();
 
                  if ($result_planner->num_rows === 0 && $planner_id) {
                      $muscle_groups = array('Chest', 'Legs', 'Arms', 'Core', 'Shoulder', 'Back');
-                     $stmt_muscle = $conn->prepare("INSERT INTO plannermusclegroup (planner_id, muscle_group, selected) VALUES (?, ?, 1) ON DUPLICATE KEY UPDATE selected=selected"); // Use ON DUPLICATE KEY UPDATE just in case
+                     $stmt_muscle = $conn->prepare("INSERT INTO plannermusclegroup (planner_id, muscle_group, selected) VALUES (?, ?, 1) ON DUPLICATE KEY UPDATE selected=selected");
                      if (!$stmt_muscle) throw new Exception("Prepare failed (plannermusclegroup): " . $conn->error);
 
                      foreach ($muscle_groups as $muscle) {
@@ -165,7 +146,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
         .radio-group label { margin: 0; font-weight: normal; color: #666; font-size: 0.95em; }
         input[type="radio"] { margin-right: 5px; }
         input[type="text"], input[type="number"], select {
-            width: 100%; 
+            width: 100%;
             padding: 10px; border: 1px solid #ccc; border-radius: 4px; font-size: 1em;
             color: #444; box-sizing: border-box;
         }
@@ -199,7 +180,7 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             .logo { margin-bottom: 10px; padding-left: 0; }
             .user-info { margin: 10px auto; flex-direction: column; }
             .logout-btn { margin-top: 5px; margin-left: 0; margin-right: 0; }
-            input[type="text"], input[type="number"], select { width: 100%; } 
+            input[type="text"], input[type="number"], select { width: 100%; }
         }
     </style>
 </head>
@@ -299,10 +280,9 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                      targetWeightInput.value = (weight * 0.9).toFixed(1);
                  } else if (target === 'muscle-gain') {
                      targetWeightInput.value = (weight * 1.1).toFixed(1);
-                 } else {
+                 } else { 
                      targetWeightInput.value = weight.toFixed(1);
                  }
-             } else {
              }
         }
 
@@ -326,21 +306,36 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             if (isNaN(targetWeight) || targetWeight < 30 || targetWeight > 300) {
                 errors.push('Please enter a valid target weight in kg (30-300).');
             }
-            if (target === 'fat-loss' && targetWeight >= weight) {
-                errors.push('For fat loss, target weight must be less than current weight.');
-            }
-            if (target === 'muscle-gain' && targetWeight <= weight) {
-                errors.push('For muscle gain, target weight must be greater than current weight.');
+            if (!isNaN(weight) && !isNaN(targetWeight)) {
+                if (target === 'fat-loss' && targetWeight >= weight) {
+                    errors.push('For fat loss, target weight must be less than current weight.');
+                }
+                if (target === 'muscle-gain' && targetWeight <= weight) {
+                    errors.push('For muscle gain, target weight must be greater than current weight.');
+                }
             }
 
+
             if (errors.length > 0) {
-                alert(errors.join('\n'));
-                e.preventDefault();
+                const errorDiv = document.querySelector('.error-message');
+                 if (errorDiv) {
+                      errorDiv.textContent = errors.join('\n');
+                      errorDiv.style.display = 'block';
+                 } else {
+                      alert(errors.join('\n'));
+                 }
+                e.preventDefault(); 
+            } else {
+                 const errorDiv = document.querySelector('.error-message');
+                 if (errorDiv) {
+                      errorDiv.style.display = 'none';
+                      errorDiv.textContent = '';
+                 }
             }
         });
 
         targetSelect.addEventListener('change', updateTargetWeightSuggestion);
-        weightInput.addEventListener('input', updateTargetWeightSuggestion); 
+        weightInput.addEventListener('input', updateTargetWeightSuggestion);
 
         document.addEventListener('DOMContentLoaded', updateTargetWeightSuggestion);
 

@@ -93,6 +93,7 @@ $tables = [
       user_password VARCHAR(255) DEFAULT NULL, 
       user_height DOUBLE DEFAULT NULL,
       user_weight DOUBLE DEFAULT NULL,
+      target_weight FLOAT NOT NULL,
       phone_number VARCHAR(10) DEFAULT NULL,
       subscription_status TINYINT(1) DEFAULT 0
   )",
@@ -119,13 +120,6 @@ $tables = [
       start_date DATE NOT NULL,
       plan_length INT(11) NOT NULL,
       plan_price INT(11) NOT NULL,
-      FOREIGN KEY (user_email) REFERENCES userstable(user_email) ON DELETE CASCADE
-  )",
-
-  "CREATE TABLE IF NOT EXISTS usertarget (
-      target_id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-      user_email VARCHAR(100) NOT NULL,
-      target_weight FLOAT NOT NULL,
       FOREIGN KEY (user_email) REFERENCES userstable(user_email) ON DELETE CASCADE
   )",
 
