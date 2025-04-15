@@ -209,7 +209,7 @@ if ($logged_in) {
         <header>
             <a href="./dashboard.php"><img src="assets/logo.png" alt="FitFlex Logo" class="logo"></a>
             <nav class="nav">
-                <button>Workouts</button>
+                <a href="./workout.php"><button>Workouts</button></a>
                 <a href="./dietpage.php"><button>Diets</button></a>
                 <a href="./about.php"><button>About Us</button></a>
             </nav>

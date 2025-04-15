@@ -71,33 +71,6 @@ body {
   margin-bottom: 20px;
 }
 
-.social-login p {
-  margin: 10px 0;
-  color: #333;
-}
-
-.social-buttons {
-  display: flex;
-  justify-content: center;
-  gap: 20px;
-  margin-bottom: 20px;
-  width: 100%;
-}
-
-.social-btn {
-  background: #fff;
-  border: 1px solid #ccc;
-  width: 79px;
-  border-radius: 10px;
-  padding: 2px;
-  cursor: pointer;
-}
-
-.social-btn img {
-  width: 24px;
-  height: 24px;
-}
-
 .signup-section p {
   margin: 10px 0;
   color: #333;

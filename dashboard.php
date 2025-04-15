@@ -141,9 +141,9 @@ $conn->close();
   <header>
     <img src="assets/logo.png" alt="FitFlex Logo" class="logo">
     <nav class="nav">
-      <button>Workouts</button>
-      <a href="./dietpage.php"><button>Diets</button></a>
-      <a href="./about.php"><button>About Us</button></a>
+    <a href="./workout.php"><button>Workouts</button></a>
+    <a href="./dietpage.php"><button>Diets</button></a>
+    <a href="./about.php"><button>About Us</button></a>
     </nav>
     <div class="user-menu">
       <span class="welcome-text">Welcome, <?php echo htmlspecialchars($_SESSION["user_name"]); ?></span>

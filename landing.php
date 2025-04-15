@@ -12,7 +12,7 @@
   <header>
     <img src="assets/logo.png" alt="FitFlex Logo" class="logo">
     <nav class="nav">
-      <button>Workouts</button>
+      <a href="./workout.php"><button>Workouts</button></a>
       <a href="./dietpage.php"><button>Diets</button></a>
       <a href="./about.php"><button>About Us</button></a>
     </nav>
@@ -84,19 +84,18 @@ $sql = "CREATE DATABASE IF NOT EXISTS $dbname";
 $conn->query($sql);
 
 $conn->select_db($dbname);
-
 $tables = [
   "CREATE TABLE IF NOT EXISTS userstable (
-        user_email VARCHAR(100) NOT NULL PRIMARY KEY,
-        user_name VARCHAR(100) NOT NULL,
-        user_age INT(11) DEFAULT NULL,
-        user_gender VARCHAR(15) DEFAULT NULL,
-        user_password VARCHAR(100) DEFAULT NULL,
-        user_height DOUBLE DEFAULT NULL,
-        user_weight DOUBLE DEFAULT NULL,
-        phone_number VARCHAR(10) DEFAULT NULL,
-        subscription_status TINYINT(1) DEFAULT 0
-    )",
+      user_email VARCHAR(100) NOT NULL PRIMARY KEY,
+      user_name VARCHAR(100) NOT NULL,
+      user_age INT(11) DEFAULT NULL,
+      user_gender VARCHAR(15) DEFAULT NULL,
+      user_password VARCHAR(255) DEFAULT NULL, 
+      user_height DOUBLE DEFAULT NULL,
+      user_weight DOUBLE DEFAULT NULL,
+      phone_number VARCHAR(10) DEFAULT NULL,
+      subscription_status TINYINT(1) DEFAULT 0
+  )",
 
   "CREATE TABLE IF NOT EXISTS userdiet (
       diet_id int(11) NOT NULL AUTO_INCREMENT,
@@ -110,52 +109,53 @@ $tables = [
       carbohydrates_g decimal(10,2) DEFAULT 0,
       fat_g decimal(10,2) DEFAULT 0,
       PRIMARY KEY (diet_id),
-      KEY user_email (user_email)
-    )",
+      KEY user_email (user_email), 
+      CONSTRAINT fk_userdiet_user FOREIGN KEY (user_email) REFERENCES userstable(user_email) ON DELETE CASCADE 
+  )",
 
-  "CREATE TABLE IF NOT EXISTS userpayment (
-        payment_id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        user_email VARCHAR(100) NOT NULL,
-        payment_method VARCHAR(255) NOT NULL,
-        FOREIGN KEY (user_email) REFERENCES userstable(user_email) ON DELETE CASCADE
-    )",
   "CREATE TABLE IF NOT EXISTS usersubscription (
-        subscription_id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        user_email VARCHAR(100) DEFAULT NULL,
-        start_date DATE NOT NULL,
-        plan_length INT(11) NOT NULL,
-        plan_price INT(11) NOT NULL,
-        FOREIGN KEY (user_email) REFERENCES userstable(user_email) ON DELETE CASCADE
-    )",
+      subscription_id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+      user_email VARCHAR(100) DEFAULT NULL,
+      start_date DATE NOT NULL,
+      plan_length INT(11) NOT NULL,
+      plan_price INT(11) NOT NULL,
+      FOREIGN KEY (user_email) REFERENCES userstable(user_email) ON DELETE CASCADE
+  )",
+
   "CREATE TABLE IF NOT EXISTS usertarget (
-        target_id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        user_email VARCHAR(100) NOT NULL,
-        target_weight FLOAT NOT NULL,
-        FOREIGN KEY (user_email) REFERENCES userstable(user_email) ON DELETE CASCADE
-    )",
+      target_id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+      user_email VARCHAR(100) NOT NULL,
+      target_weight FLOAT NOT NULL,
+      FOREIGN KEY (user_email) REFERENCES userstable(user_email) ON DELETE CASCADE
+  )",
+
   "CREATE TABLE IF NOT EXISTS workoutplanner (
-        planner_id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        user_email VARCHAR(100) DEFAULT NULL,
-        preferred_days INT(11) NOT NULL,
-        workout_count INT(11) NOT NULL,
-        FOREIGN KEY (user_email) REFERENCES userstable(user_email) ON DELETE CASCADE
-    )",
+      planner_id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
+      user_email VARCHAR(100) DEFAULT NULL,
+      plan_days INT(11) NOT NULL,
+      exercises_per_day INT(11) DEFAULT 5,
+      FOREIGN KEY (user_email) REFERENCES userstable(user_email) ON DELETE CASCADE
+  )",
+
   "CREATE TABLE IF NOT EXISTS plannermusclegroup (
-        planner_id INT(11) NOT NULL,
-        muscle_group ENUM('Chest','Legs','Arms','Core','Shoulder','Back') NOT NULL,
-        selected TINYINT(1) DEFAULT 1,
-        PRIMARY KEY (planner_id, muscle_group),
-        FOREIGN KEY (planner_id) REFERENCES workoutplanner(planner_id) ON DELETE CASCADE
-    )",
-  "CREATE TABLE IF NOT EXISTS userworkout (
-        workout_id INT(11) NOT NULL AUTO_INCREMENT PRIMARY KEY,
-        planner_id INT(11) DEFAULT NULL,
-        muscle_group ENUM('Chest','Legs','Arms','Core','Shoulder','Back') DEFAULT NULL,
-        set_count INT(11) NOT NULL,
-        repetitions INT(11) NOT NULL,
-        calories_burnt FLOAT NOT NULL,
-        FOREIGN KEY (planner_id, muscle_group) REFERENCES plannermusclegroup(planner_id, muscle_group) ON DELETE CASCADE
-    )"
+      planner_id INT(11) NOT NULL,
+      muscle_group ENUM('Chest','Legs','Arms','Core','Shoulder','Back') NOT NULL,
+      selected TINYINT(1) DEFAULT 1,
+      PRIMARY KEY (planner_id, muscle_group),
+      FOREIGN KEY (planner_id) REFERENCES workoutplanner(planner_id) ON DELETE CASCADE
+  )",
+
+  "CREATE TABLE IF NOT EXISTS planned_exercises (
+      plan_exercise_id INT AUTO_INCREMENT PRIMARY KEY,
+      planner_id INT NOT NULL,
+      day_number INT NOT NULL,
+      exercise_id VARCHAR(255) NOT NULL,
+      sets INT DEFAULT 3,
+      reps VARCHAR(20) DEFAULT '8-12',
+      sort_order INT DEFAULT 0,
+      FOREIGN KEY (planner_id) REFERENCES workoutplanner(planner_id) ON DELETE CASCADE,
+      UNIQUE KEY unique_plan_day_exercise (planner_id, day_number, exercise_id)
+  )"
 ];
 
 foreach ($tables as $sql) {
