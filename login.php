@@ -43,12 +43,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
                 exit();
             }
 
-            $targetQuery = $conn->prepare("SELECT * FROM usertarget WHERE user_email = ?");
+            $targetQuery = $conn->prepare("SELECT target_weight FROM userstable WHERE user_email = ?");
             $targetQuery->bind_param("s", $email);
             $targetQuery->execute();
             $targetResult = $targetQuery->get_result();
 
-            if ($targetResult->num_rows === 0) {
+            if ($targetResult === 0) {
                 header("Location: details.php");
                 exit();
             }
