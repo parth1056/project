@@ -80,7 +80,6 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["query"]) && $is_today
                 );
 
                 if ($stmt->execute()) {
-                    // No need to add to session here as it will be reloaded
                     $feedback = htmlspecialchars(ucfirst($newItem['name'])) . " added successfully!";
                 } else {
                     $feedback = "Error saving food item to database: " . $conn->error;
@@ -97,11 +96,9 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["query"]) && $is_today
     exit();
 }
 
-// Deleting needs specific context but affects the total, so redirect after DB operation
 if (isset($_GET["delete"]) && $is_today) {
-    $diet_id_to_delete = (int)$_GET["delete"]; // Assuming you pass the diet_id
+    $diet_id_to_delete = (int)$_GET["delete"]; 
 
-    // Fetch the item details before deleting to provide feedback if needed
     $stmt_fetch = $conn->prepare("SELECT food_category FROM userdiet WHERE diet_id = ? AND user_email = ? AND meal_date = ?");
     $stmt_fetch->bind_param("iss", $diet_id_to_delete, $user_email, $selected_date);
     $stmt_fetch->execute();
@@ -126,12 +123,10 @@ if (isset($_GET["delete"]) && $is_today) {
     exit();
 }
 
-// Updating needs specific context but affects the total, redirect after DB operation
 if (isset($_GET["update"]) && $is_today) {
     $diet_id_to_update = (int)$_GET["update"];
     $change = (int)$_GET["change"];
 
-    // Fetch the item to get base values and current quantity
     $stmt_fetch = $conn->prepare("SELECT * FROM userdiet WHERE diet_id = ? AND user_email = ? AND meal_date = ?");
     $stmt_fetch->bind_param("iss", $diet_id_to_update, $user_email, $selected_date);
     $stmt_fetch->execute();
@@ -144,16 +139,14 @@ if (isset($_GET["update"]) && $is_today) {
         $new_quantity = $current_quantity + $change;
 
         if ($new_quantity < 1) {
-            $new_quantity = 1; // Prevent quantity from going below 1
+            $new_quantity = 1; 
         }
 
-        // Calculate base values per single serving if quantity was > 1 initially
         $base_calories = $food_item["calorie_intake"] / $current_quantity;
         $base_protein = $food_item["protein_g"] / $current_quantity;
         $base_carbs = $food_item["carbohydrates_g"] / $current_quantity;
         $base_fat = $food_item["fat_g"] / $current_quantity;
 
-        // Calculate new totals based on the new quantity
         $new_total_calories = $base_calories * $new_quantity;
         $new_total_protein = $base_protein * $new_quantity;
         $new_total_carbs = $base_carbs * $new_quantity;
@@ -192,7 +185,6 @@ if (isset($_GET['feedback'])) {
     $feedback = htmlspecialchars($_GET['feedback']);
 }
 
-// Fetch items ONLY for the currently selected meal time to display in the list
 $stmt_display = $conn->prepare("SELECT * FROM userdiet WHERE user_email = ? AND meal_date = ? AND meal_time = ? ORDER BY diet_id");
 $stmt_display->bind_param("sss", $user_email, $selected_date, $current_meal_time);
 $stmt_display->execute();
@@ -203,12 +195,11 @@ while ($row = $result_display->fetch_assoc()) {
 }
 $stmt_display->close();
 
-// Fetch ALL items for the selected date to calculate totals
 $totalCalories = 0;
 $totalProtein = 0;
 $totalCarbs = 0;
 $totalFats = 0;
-$targetCalories = 2000; // You might fetch this from user settings later
+$targetCalories = 2000; 
 
 $stmt_totals = $conn->prepare("SELECT calorie_intake, protein_g, carbohydrates_g, fat_g FROM userdiet WHERE user_email = ? AND meal_date = ?");
 $stmt_totals->bind_param("ss", $user_email, $selected_date);
