@@ -93,7 +93,8 @@ $tables = [
       user_password VARCHAR(255) DEFAULT NULL, 
       user_height DOUBLE DEFAULT NULL,
       user_weight DOUBLE DEFAULT NULL,
-      target_weight FLOAT NOT NULL,
+      target_weight FLOAT NULL,
+      calorie int(5) DEFAULT NULL,
       phone_number VARCHAR(10) DEFAULT NULL,
       subscription_status TINYINT(1) DEFAULT 0
   )",
@@ -131,14 +132,6 @@ $tables = [
       FOREIGN KEY (user_email) REFERENCES userstable(user_email) ON DELETE CASCADE
   )",
 
-  "CREATE TABLE IF NOT EXISTS plannermusclegroup (
-      planner_id INT(11) NOT NULL,
-      muscle_group ENUM('Chest','Legs','Arms','Core','Shoulder','Back') NOT NULL,
-      selected TINYINT(1) DEFAULT 1,
-      PRIMARY KEY (planner_id, muscle_group),
-      FOREIGN KEY (planner_id) REFERENCES workoutplanner(planner_id) ON DELETE CASCADE
-  )",
-
   "CREATE TABLE IF NOT EXISTS planned_exercises (
       plan_exercise_id INT AUTO_INCREMENT PRIMARY KEY,
       planner_id INT NOT NULL,
@@ -149,11 +142,37 @@ $tables = [
       sort_order INT DEFAULT 0,
       FOREIGN KEY (planner_id) REFERENCES workoutplanner(planner_id) ON DELETE CASCADE,
       UNIQUE KEY unique_plan_day_exercise (planner_id, day_number, exercise_id)
-  )"
+  )",
+  
+  "CREATE TABLE IF NOT EXISTS user_weight_history (
+        history_id INT AUTO_INCREMENT PRIMARY KEY,
+        user_email VARCHAR(100) NOT NULL,
+        weight DOUBLE NOT NULL,
+        log_date TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        FOREIGN KEY (user_email) REFERENCES userstable(user_email) ON DELETE CASCADE
+    )"
 ];
 
 foreach ($tables as $sql) {
   $conn->query($sql);
+}
+
+$trigger_sql = "
+CREATE TRIGGER log_weight_update
+AFTER UPDATE ON userstable
+FOR EACH ROW
+BEGIN
+    IF NOT (NEW.user_weight <=> OLD.user_weight) THEN
+        INSERT INTO user_weight_history (user_email, weight)
+        VALUES (NEW.user_email, NEW.user_weight);
+    END IF;
+END;
+";
+
+if ($conn->query($trigger_sql) === FALSE) {
+    if ($conn->errno != 1359) {
+        error_log("Error creating trigger 'log_weight_update': " . $conn->error);
+    }
 }
 $conn->close();
 ?>

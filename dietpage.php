@@ -13,8 +13,8 @@ if ($conn->connect_error) {
 
 $user_email = $_SESSION["user_email"];
 
-$meal_times = ["Breakfast", "Lunch", "Dinner", "Snacks"]; 
-$current_meal_time = "Breakfast"; 
+$meal_times = ["Breakfast", "Lunch", "Dinner", "Snacks"];
+$current_meal_time = "Breakfast";
 if (isset($_GET["meal_time"]) && in_array($_GET["meal_time"], $meal_times)) {
     $current_meal_time = $_GET["meal_time"];
 }
@@ -61,7 +61,7 @@ if ($_SERVER["REQUEST_METHOD"] === "POST" && isset($_POST["query"]) && $is_today
                     "fat_total_g" => $item["fat_total_g"] ?? 0,
                     "fiber_g" => $item["fiber_g"] ?? 0,
                     "quantity" => 1,
-                    "meal_time" => $current_meal_time, 
+                    "meal_time" => $current_meal_time,
                     "meal_date" => $selected_date
                 ];
 
@@ -185,7 +185,26 @@ $totalCalories = 0;
 $totalProtein = 0;
 $totalCarbs = 0;
 $totalFats = 0;
-$targetCalories = 2000; 
+$targetCalories = 2000;
+
+$stmt_goal = $conn->prepare("SELECT calorie FROM userstable WHERE user_email = ?");
+if ($stmt_goal) {
+    $stmt_goal->bind_param("s", $user_email);
+    if ($stmt_goal->execute()) {
+        $result_goal = $stmt_goal->get_result();
+        if ($row_goal = $result_goal->fetch_assoc()) {
+            if (isset($row_goal['calorie']) && is_numeric($row_goal['calorie']) && $row_goal['calorie'] > 0) {
+                $targetCalories = (int)$row_goal['calorie'];
+            }
+        }
+    } else {
+        error_log("Error executing goal query: " . $stmt_goal->error);
+    }
+    $stmt_goal->close();
+} else {
+     error_log("Error preparing goal query: " . $conn->error);
+}
+
 
 $stmt_totals = $conn->prepare("SELECT calorie_intake, protein_g, carbohydrates_g, fat_g FROM userdiet WHERE user_email = ? AND meal_date = ?");
 $stmt_totals->bind_param("ss", $user_email, $selected_date);
@@ -295,12 +314,46 @@ $conn->close();
         .carbs-bar .nutrient-bar-fill { background-color: #ffdd57; }
         .fats-bar .nutrient-bar-fill { background-color: #fd7e14; }
         .past-date-notice { background-color: #ffe8cc; border-left: 4px solid #fd7e14; padding: 10px 15px; margin-bottom: 20px; border-radius: 4px; font-size: 0.9rem; color: #864400; }
+        .track-macros-btn {
+            background-color:rgba(227, 227, 227, 0.77);
+            color: #343a40;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 28px;
+            font-weight: 600;
+            text-decoration: none;
+            transition: background-color 0.2s ease;
+            margin-left: 15px;
+        }
+        .track-macros-btn:hover {
+            background-color: rgba(156, 156, 156, 0.77);
+            color: #343a40;
+        }
+        .title-button-group {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: 1.5rem; 
+        }
+         @media (max-width: 768px) {
+            .title-button-group {
+                flex-direction: column; 
+                align-items: flex-start;
+            }
+            .track-macros-btn {
+                margin-left: 0; 
+                margin-top: 10px; 
+                align-self: center; 
+            }
+         }
+
     </style>
 </head>
 <body>
     <header>
         <a href="./dashboard.php"><img src="assets/logo.png" alt="FitFlex Logo" class="logo"></a>
         <nav class="nav">
+            <a href="./planner.php"><button>Planner</button></a>
             <a href="./workout.php"><button>Workouts</button></a>
             <a href="./dietpage.php"><button style="background-color: #555; border-radius: 5px;">Diets</button></a>
             <a href="./about.php"><button>About Us</button></a>
@@ -329,11 +382,12 @@ $conn->close();
     </div>
 
     <div class="container main-content">
-        <div class="row align-items-center mb-4">
-            <div class="col-md-6">
-                <h1 class="section-title">Daily <br> Nutrition</h1>
+        <div class="row align-items-center">
+            <div class="col-md-6 title-button-group">
+                <h1 class="section-title mb-0">Daily <br> Nutrition</h1>
+                 <a href="macro.php" class="track-macros-btn"><i class="fas fa-chart-pie me-2"></i>Track Macros</a>
             </div>
-            <div class="col-md-6 d-flex justify-content-md-end justify-content-center">
+            <div class="col-md-6 d-flex justify-content-md-end justify-content-center mt-3 mt-md-0">
                 <div class="date-selector">
                     <div class="calendar-picker">
                         <button class="calendar-btn" id="calendarToggle"><i class="fas fa-calendar-alt"></i></button>
@@ -404,16 +458,15 @@ $conn->close();
         <div class="row mt-5"><div class="col-md-4"><div class="card mb-4"><div class="card-body"><h5 class="card-title"><i class="fas fa-chart-pie me-2"></i> Todays Nutrient Breakdown</h5><div class="d-flex justify-content-around text-center mt-4"><div><h6><?= round($totalProtein) ?>g</h6><small class="text-muted">Protein</small></div><div><h6><?= round($totalCarbs) ?>g</h6><small class="text-muted">Carbs</small></div><div><h6><?= round($totalFats) ?>g</h6><small class="text-muted">Fats</small></div></div></div></div></div><div class="col-md-8"><div class="card"><div class="card-body"><h5 class="card-title"><i class="fas fa-lightbulb me-2"></i> Tip of the Day</h5><p class="card-text">Focus on whole foods like fruits, vegetables, lean proteins, and whole grains. They provide essential nutrients your body needs and help maintain energy levels throughout the day.</p></div></div></div></div>
     </div>
 
-    <footer><div class="container"><p>© 2024 FitFlex. All rights reserved.</p></div></footer>
+    <footer><div class="container"><p>© 2025 FitFlex. All rights reserved.</p></div></footer>
 
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js" integrity="sha384-YvpcrYf0tY3lHB60NNkmXc5s9fDVZLESaAA55NDzOxhy9GkcIdslK1eN7N6jIeHz" crossorigin="anonymous"></script>
     <script>
-        const datePicker = flatpickr("#datePicker", { dateFormat: "Y-m-d", maxDate: "today", onChange: function(selectedDates, dateStr) { window.location.href = `?date=${dateStr}&meal_time=<?= urlencode($current_meal_time) ?>`; } });
+        const datePicker = flatpickr("#datePicker", { dateFormat: "Y-m-d", maxDate: "today", defaultDate: "<?= $selected_date ?>", onChange: function(selectedDates, dateStr) { window.location.href = `?date=${dateStr}&meal_time=<?= urlencode($current_meal_time) ?>`; } });
         document.getElementById('calendarToggle').addEventListener('click', function() { datePicker.open(); });
         function openProfile() { document.getElementById('profileModal').style.display = 'flex'; }
         function closeProfile() { document.getElementById('profileModal').style.display = 'none'; }
         window.addEventListener('click', function(event) { if (event.target === document.getElementById('profileModal')) { closeProfile(); } });
-<?= $current_meal_time ?>
     </script>
 </body>
 </html>

@@ -48,9 +48,12 @@ if ($_SERVER["REQUEST_METHOD"] == "POST") {
             $targetQuery->execute();
             $targetResult = $targetQuery->get_result();
 
-            if ($targetResult === 0) {
-                header("Location: details.php");
-                exit();
+            if ($targetResult->num_rows > 0) {
+                $targetRow = $targetResult->fetch_assoc();
+                if ($targetRow['target_weight'] == 0 || $targetRow['target_weight'] === NULL) {
+                    header("Location: details.php");
+                    exit();
+                }
             }
 
             header("Location: dashboard.php");

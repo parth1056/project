@@ -434,164 +434,23 @@ $conn->close();
     <title>FitFlex - Workout Planner</title>
     <link rel="stylesheet" href="styles.css">
     <style>
-        header {
-            background: black !important;
-            width: 100% !important;
-            height: 178px !important;
-            display: flex !important;
-            align-items: center !important;
-            padding: 0 20px !important;
-            justify-content: space-between !important;
-            position: relative !important;
-            margin: 0 !important;
-            box-sizing: border-box !important;
-            font-family: Arial, sans-serif !important;
-        }
-
-        header .logo {
-            width: 210.35px !important;
-            height: 130px !important;
-            margin: 0 !important;
-            padding: 0 !important;
-        }
-
-        header .nav {
-            display: flex !important;
-            gap: 15px !important;
-            margin-left: auto !important;
-            margin-right: 25px !important;
-            background: transparent !important;
-            padding: 0 !important;
-            flex-wrap: nowrap !important;
-        }
-
-        header .nav button {
-            background: none !important;
-            border: none !important;
-            color: white !important;
-            font-size: 18px !important;
-            height: 30px !important;
-            cursor: pointer !important;
-            margin: 0 !important;
-            padding: 0 6px 0 6px !important;
-            box-shadow: none !important;
-            line-height: normal !important;
-            font-weight: normal !important;
-            font-family: Arial, sans-serif !important;
-        }
-
-        header .user-menu {
-            display: flex !important;
-            flex-direction: column !important;
-            align-items: flex-end !important;
-            margin-left: auto !important;
-            margin-right: 0px !important;
-            gap: 10px !important;
-            padding: 0 !important;
-            padding-right: 2px !important;
-        }
-
-        header .welcome-text {
-            color: white !important;
-            font-size: 18px !important;
-            margin: 0 !important;
-            font-weight: normal !important;
-            font-family: Arial, sans-serif !important;
-            text-align: right !important;
-            width: 100% !important;
-        }
-
-        header .user-actions {
-            display: flex !important;
-            gap: 10px !important;
-            margin: 0 !important;
-            padding: 0 !important;
-            justify-content: center !important;
-            width: 100% !important;
-        }
-
-        header .logout-btn,
-        header .profile-btn {
-            background: #dc3545 !important;
-            color: white !important;
-            border: none !important;
-            font-size: 16px !important;
-            padding: 8px 15px !important;
-            border-radius: 10px !important;
-            cursor: pointer !important;
-            text-decoration: none !important;
-            display: inline-block !important;
-            line-height: normal !important;
-            font-weight: normal !important;
-            text-transform: none !important;
-            box-shadow: none !important;
-            font-family: Arial, sans-serif !important;
-        }
-
-        header .profile-btn {
-            background: #28a745 !important;
-        }
-
-        .profile-modal {
-            display: none;
-            position: fixed;
-            top: 0;
-            left: 0;
-            width: 100%;
-            height: 100%;
-            background: rgba(0, 0, 0, 0.5);
-            justify-content: center;
-            align-items: center;
-            z-index: 1000;
-        }
-
-        .profile-modal-content {
-            background: white;
-            width: 80%;
-            max-width: 600px;
-            padding: 20px;
-            border-radius: 10px;
-            position: relative;
-            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
-        }
-
-        .close-btn {
-            position: absolute;
-            top: 10px;
-            right: 10px;
-            background: #dc3545;
-            color: white;
-            border: none;
-            padding: 5px 10px;
-            border-radius: 5px;
-            cursor: pointer;
-        }
-
-        .profile-table {
-            width: 100%;
-            border-collapse: collapse;
-            margin: 15px 0;
-        }
-
-        .profile-table th,
-        .profile-table td {
-            border: 1px solid #ddd;
-            padding: 10px;
-            text-align: left;
-        }
-
-        .profile-link {
-            display: block;
-            margin-top: 10px;
-            text-align: center;
-            color: #28a745;
-            text-decoration: none;
-            font-weight: bold;
-        }
-
-        .profile-link:hover {
-            text-decoration: underline;
-        }
+        header { background: black !important; width: 100% !important; height: 178px !important; display: flex !important; align-items: center !important; padding: 0 20px !important; justify-content: space-between !important; position: relative !important; margin: 0 !important; box-sizing: border-box !important; font-family: Arial, sans-serif !important; }
+        header .logo { width: 210.35px !important; height: 130px !important; margin: 0 !important; padding: 0 !important; }
+        header .nav { display: flex !important; gap: 15px !important; margin-left: auto !important; margin-right: 25px !important; background: transparent !important; padding: 0 !important; flex-wrap: nowrap !important; }
+        header .nav button { background: none !important; border: none !important; color: white !important; font-size: 18px !important; height: 30px !important; cursor: pointer !important; margin: 0 !important; padding: 0 6px 0 6px !important; box-shadow: none !important; line-height: normal !important; font-weight: normal !important; font-family: Arial, sans-serif !important; }
+        header .nav a { text-decoration: none; }
+        header .user-menu { display: flex !important; flex-direction: column !important; align-items: flex-end !important; margin-left: auto !important; margin-right: 0px !important; gap: 10px !important; padding: 0 !important; padding-right: 2px !important; }
+        header .welcome-text { color: white !important; font-size: 18px !important; margin: 0 !important; font-weight: normal !important; font-family: Arial, sans-serif !important; text-align: right !important; width: 100% !important; }
+        header .user-actions { display: flex !important; gap: 10px !important; margin: 0 !important; padding: 0 !important; justify-content: center !important; width: 100% !important; }
+        header .logout-btn, header .profile-btn { background: #dc3545 !important; color: white !important; border: none !important; font-size: 16px !important; padding: 8px 15px !important; border-radius: 10px !important; cursor: pointer !important; text-decoration: none !important; display: inline-block !important; line-height: normal !important; font-weight: normal !important; text-transform: none !important; box-shadow: none !important; font-family: Arial, sans-serif !important; }
+        header .profile-btn { background: #28a745 !important; }
+        .profile-modal { display: none; position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.5); justify-content: center; align-items: center; z-index: 1000; }
+        .profile-modal-content { background: white; width: 80%; max-width: 600px; padding: 20px; border-radius: 10px; position: relative; box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3); }
+        .close-btn { position: absolute; top: 10px; right: 10px; background: #dc3545; color: white; border: none; padding: 5px 10px; border-radius: 5px; cursor: pointer; font-size: 16px; line-height: 1;}
+        .profile-table { width: 100%; border-collapse: collapse; margin: 15px 0; }
+        .profile-table th, .profile-table td { border: 1px solid #ddd; padding: 10px; text-align: left; }
+        .profile-link { display: block; margin-top: 10px; text-align: center; color: #28a745; text-decoration: none; font-weight: bold; }
+        .profile-link:hover { text-decoration: underline; }
         :root {
             --background-color: #fdfaf6;
             --card-background: #ffffff;
@@ -1289,10 +1148,11 @@ $conn->close();
 </head>
 
 <body>
-    <header>
+<header>
         <a href="./dashboard.php"><img src="assets/logo.png" alt="FitFlex Logo" class="logo"></a>
         <nav class="nav">
-            <button style="background-color: #555; border-radius: 5px;">Workouts</button>
+            <a href="./planner.php"><button>Planner</button></a>
+            <a href="./workout.php"><button>Workouts</button></a>
             <a href="./dietpage.php"><button>Diets</button></a>
             <a href="./about.php"><button>About Us</button></a>
         </nav>
