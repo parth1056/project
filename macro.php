@@ -30,6 +30,26 @@ $totalCarbs = 0;
 $totalFats = 0;
 $meals = ['Breakfast' => [], 'Lunch' => [], 'Dinner' => [], 'Snacks' => []];
 
+$targetCalories = 2000; // Default value
+$stmt_goal = $conn->prepare("SELECT calorie FROM userstable WHERE user_email = ?");
+if ($stmt_goal) {
+    $stmt_goal->bind_param("s", $user_email);
+    if ($stmt_goal->execute()) {
+        $result_goal = $stmt_goal->get_result();
+        if ($row_goal = $result_goal->fetch_assoc()) {
+            if (isset($row_goal['calorie']) && is_numeric($row_goal['calorie']) && $row_goal['calorie'] > 0) {
+                $targetCalories = (int)$row_goal['calorie'];
+            }
+        }
+    } else {
+        error_log("Error executing goal query: " . $stmt_goal->error);
+    }
+    $stmt_goal->close();
+} else {
+     error_log("Error preparing goal query: " . $conn->error);
+}
+
+
 $stmt = $conn->prepare("SELECT food_category, calorie_intake, protein_g, carbohydrates_g, fat_g, meal_time, quantity FROM userdiet WHERE user_email = ? AND meal_date = ? ORDER BY meal_time, diet_id");
 $stmt->bind_param("ss", $user_email, $selected_date);
 $stmt->execute();
@@ -67,7 +87,7 @@ while ($row = $result->fetch_assoc()) {
 $stmt->close();
 $conn->close();
 
-$targetCalories = 2000;
+
 $targetProtein = 100;
 $targetFat = 70;
 $targetCarbs = 230;
