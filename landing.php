@@ -158,6 +158,7 @@ foreach ($tables as $sql) {
 }
 
 $trigger_sql = "
+DROP TRIGGER IF EXISTS log_weight_update;
 CREATE TRIGGER log_weight_update
 AFTER UPDATE ON userstable
 FOR EACH ROW
@@ -169,7 +170,7 @@ BEGIN
 END;
 ";
 
-if ($conn->query($trigger_sql) === FALSE) {
+if ($conn->multi_query($trigger_sql) === FALSE) { 
     if ($conn->errno != 1359) {
         error_log("Error creating trigger 'log_weight_update': " . $conn->error);
     }
